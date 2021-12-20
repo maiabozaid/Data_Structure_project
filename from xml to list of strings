@@ -51,7 +51,7 @@ int main()
 
                 for (k = k + 1; xml_file[k] != '<' && k < xml_file.length(); k++)
                 {
-                    if (xml_file[k] == ' ') continue;
+                    if (xml_file[k] == '  ') continue;
                     else
                     {
                         value = value + xml_file[k];
