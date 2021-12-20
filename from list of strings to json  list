@@ -1,0 +1,143 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <stack>
+#include <list>
+using namespace std;
+
+ 
+
+
+int main() {
+	//do try ...catch to convert string into number
+
+
+
+	list <string> op_stk;
+	list <string> cl_stk;
+	list <string> dlt;
+
+
+	list <string> lst{ "user" ,"id" , "5" ,"/id", "id" , "3" ,"/id", "id" , "1" ,"/id", "/user" };
+
+
+	 auto ptr = lst.begin(); // head 
+
+	for (; ptr != lst.end();) { // ptr for 
+		string s = *ptr;  // data of the node
+
+		//in case of opening tag
+		if (s[0] != '/' && s[0] != '{' && s[0] != '}' && s[0] != ',') {
+
+			string two_next = *next(ptr, 2); // check that it doesn't exceed the list
+			if ('/' + s == two_next) { //closing tag after 2 nodes , value between , one line xml tags
+				ptr = next(ptr, 2); // increase ptr with 2 ptr  = ptr + 2
+				continue;
+			}
+			else {
+				lst.emplace( next(ptr) , 1 , '{'); 
+				ptr++; 
+				continue;
+			}
+		}
+
+		//in case of closing tag
+		if (s[0] == '/') { // increase ptr++
+			string two_prev = *prev(ptr, 2);
+			if ('/' + two_prev != s) { // group closing tag , not one line
+				lst.emplace(next(ptr), 1, '}');
+			}
+			string next_node = *next(ptr); 
+			if (next_node[0] != '/' && next_node[0] != '}' && next_node[0] != ',') // the next is a name
+			{
+				lst.emplace(next(ptr), 1, ','); //edit prev instead next
+
+			}
+			//name and as my name
+			if (next_node[0] != '/' && s == '/' + next_node) // s = /id , next = id <<<<array []>>
+			{
+				cl_stk.push_front(s); 
+				op_stk.push_back(next_node); 
+				dlt.push_back(next_node);
+			}
+		
+		}
+		ptr++;
+	}
+
+
+	/////////////////////// do unique to add single brackits 
+	op_stk.unique();
+	cl_stk.unique();
+	// dlt.unique();
+
+
+	// <<<<< insert [ >>>>>>>>>>>>>>
+	auto frt = lst.begin(); // tail
+
+
+	for (; op_stk.empty() != true; frt++ ) {
+		if (*frt == op_stk.front()) {
+
+			lst.emplace(next(frt), 1, '[');
+			op_stk.pop_front();
+
+		}
+	}
+
+	// <<<<< insert ] >>>>>>>>>>>>>>
+	auto bck = lst.end(); // tail
+	bck--; 
+	
+
+	for (; cl_stk.empty() != true  ; bck--) {
+		if (*bck == cl_stk.front()) {
+
+			lst.emplace(bck, 1, ']');
+			cl_stk.pop_front();
+
+		}
+	}
+
+// <<<<<<<<< delete repeated elements >>>>>>>>>>>>>
+
+	auto to_be_dlted = lst.begin(); // tail
+
+	int count = 1;
+
+	for (; to_be_dlted != lst.end() ; ) {
+		string s = *to_be_dlted;
+		if (dlt.empty() != true && s == dlt.front() ) {
+			if (count == 1) {
+				count++; 
+				to_be_dlted++;
+				continue; 
+			}
+
+			to_be_dlted = next(to_be_dlted);
+			lst.erase(prev(to_be_dlted));
+			dlt.pop_front();
+			continue;
+
+		}
+		if (s[0] == '/') {
+			to_be_dlted = next(to_be_dlted);
+			lst.erase(prev(to_be_dlted));
+			continue; 
+		}
+		to_be_dlted++;
+	}
+	// delete all closing tag
+	
+	for (ptr = lst.begin(); ptr !=  lst.end(); ptr++) {
+
+		cout << *ptr << '\n'  ;
+
+	}
+
+
+
+}
+// *next(ptr,2) value of the node next the current with 2 positions
+// next(ptr,2)   node after current node by two positions
+// prev(ptr,0) current node ;
