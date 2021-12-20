@@ -1,3 +1,4 @@
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -5,7 +6,7 @@
 #include <list>
 using namespace std;
 
- 
+
 
 
 int main() {
@@ -18,10 +19,11 @@ int main() {
 	list <string> dlt;
 
 
-	list <string> lst{ "user" ,"id" , "5" ,"/id", "id" , "3" ,"/id", "id" , "1" ,"/id", "/user" };
+	list <string> lst{ "user" ,
+		"id" , "5" ,"/id", "id" , "3" ,"/id", "name" , "sayed" ,"/name","name" , "ali" ,"/name", "/user" };
 
 
-	 auto ptr = lst.begin(); // head 
+	auto ptr = lst.begin(); // head 
 
 	for (; ptr != lst.end();) { // ptr for 
 		string s = *ptr;  // data of the node
@@ -35,8 +37,8 @@ int main() {
 				continue;
 			}
 			else {
-				lst.emplace( next(ptr) , 1 , '{'); 
-				ptr++; 
+				lst.emplace(next(ptr), 1, '{');
+				ptr++;
 				continue;
 			}
 		}
@@ -47,7 +49,7 @@ int main() {
 			if ('/' + two_prev != s) { // group closing tag , not one line
 				lst.emplace(next(ptr), 1, '}');
 			}
-			string next_node = *next(ptr); 
+			string next_node = *next(ptr);
 			if (next_node[0] != '/' && next_node[0] != '}' && next_node[0] != ',') // the next is a name
 			{
 				lst.emplace(next(ptr), 1, ','); //edit prev instead next
@@ -56,18 +58,18 @@ int main() {
 			//name and as my name
 			if (next_node[0] != '/' && s == '/' + next_node) // s = /id , next = id <<<<array []>>
 			{
-				cl_stk.push_front(s); 
-				op_stk.push_back(next_node); 
-				dlt.push_back(next_node);
+				cl_stk.push_front(s);
+				op_stk.push_back(next_node);
+				dlt.push_back(next_node); 
 			}
-		
+
 		}
 		ptr++;
 	}
 
 
 	/////////////////////// do unique to add single brackits 
-	op_stk.unique();
+	op_stk.unique(); 
 	cl_stk.unique();
 	// dlt.unique();
 
@@ -75,22 +77,21 @@ int main() {
 	// <<<<< insert [ >>>>>>>>>>>>>>
 	auto frt = lst.begin(); // tail
 
-
-	for (; op_stk.empty() != true; frt++ ) {
+	for (; op_stk.empty() != true; frt++) {
 		if (*frt == op_stk.front()) {
 
 			lst.emplace(next(frt), 1, '[');
 			op_stk.pop_front();
-
+			
 		}
 	}
 
 	// <<<<< insert ] >>>>>>>>>>>>>>
 	auto bck = lst.end(); // tail
-	bck--; 
-	
+	bck--;
 
-	for (; cl_stk.empty() != true  ; bck--) {
+
+	for (; cl_stk.empty() != true; bck--) {
 		if (*bck == cl_stk.front()) {
 
 			lst.emplace(bck, 1, ']');
@@ -99,39 +100,43 @@ int main() {
 		}
 	}
 
-// <<<<<<<<< delete repeated elements >>>>>>>>>>>>>
+	// <<<<<<<<< delete repeated elements >>>>>>>>>>>>>
 
 	auto to_be_dlted = lst.begin(); // tail
 
 	int count = 1;
 
-	for (; to_be_dlted != lst.end() ; ) {
+	for (; to_be_dlted != lst.end(); ) {
 		string s = *to_be_dlted;
-		if (dlt.empty() != true && s == dlt.front() ) {
+		if (dlt.empty() != true && s == dlt.front()) {
 			if (count == 1) {
-				count++; 
+				count++;
 				to_be_dlted++;
-				continue; 
+				continue;
 			}
 
 			to_be_dlted = next(to_be_dlted);
 			lst.erase(prev(to_be_dlted));
+			string check = dlt.front(); 	// check if the next is as my name and if it doesn't : make count == 1 again
 			dlt.pop_front();
+			if (dlt.empty() != true) {
+				if (check != dlt.front()) count = 1;
+			}
 			continue;
 
 		}
 		if (s[0] == '/') {
-			to_be_dlted = next(to_be_dlted);
+			to_be_dlted = next(to_be_dlted); //swap between next & prev
 			lst.erase(prev(to_be_dlted));
-			continue; 
+			continue;
 		}
 		to_be_dlted++;
 	}
 	// delete all closing tag
-	
-	for (ptr = lst.begin(); ptr !=  lst.end(); ptr++) {
 
-		cout << *ptr << '\n'  ;
+	for (ptr = lst.begin(); ptr != lst.end(); ptr++) {
+
+		cout << *ptr << '\n';
 
 	}
 
