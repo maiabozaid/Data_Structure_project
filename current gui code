@@ -13,6 +13,10 @@
 #include <QStack>
 #include <vector>
 #include <string>
+#include <unordered_map>
+#include<fstream>
+#include<algorithm>
+#include <list>
 using namespace std;
 
 MainWindow::MainWindow(QWidget *parent)
@@ -46,8 +50,16 @@ void minify2(string str1, QString* min) {
 }
 //-------------------
 void minify3(string str1, QString* min) {
+    //QRegularExpression ex(">( \n|\n *| *|\n)+<");
+    //-------------
     QRegularExpression ex(">( *\n|\n *)+<");
     QString s = QString::fromStdString(str1);
+    s.replace(QRegularExpression(ex), "><");
+    *min = s;
+}
+
+void minify4(QString s, QString* min) {
+    QRegularExpression ex(">( *\n|\n *)+<");
     s.replace(QRegularExpression(ex), "><");
     *min = s;
 }
@@ -138,17 +150,11 @@ void check_consistency(string xml_file, string* new_xml_file)
         else
             continue;
     }
-//    cout << "stack size: " << s.size() << endl;
-//    cout << "stack top: " << s.top() << endl;
-
     if (s.empty())
     {
-        cout << "The XML File is consistent" << endl;
-        //cout << "File: \n" << (*new_xml_file) << endl;
         string str = "The XML File is consistent";
         QString qstr = QString::fromStdString(str);
         QMessageBox::information(0, "Successful!", qstr);
-        cout << "stack empty" << endl;
         return;
     }
     else
@@ -159,7 +165,6 @@ void check_consistency(string xml_file, string* new_xml_file)
         string str2 = "SOLVING ERRORS";
         QString qstr2 = QString::fromStdString(str2);
         QMessageBox::information(0, "ERROR!", qstr2);
-        cout << "outside while" << endl;
         while (!s.empty())
         {
             string missing_close_tag = "";
@@ -175,9 +180,332 @@ void check_consistency(string xml_file, string* new_xml_file)
 
 }
 //-------------------
+vector<int> encoding(string s)
+{
+    unordered_map<string, int> table;
+    for (int i = 0; i <= 255; i++) {
+        string x = "";
+        x += char(i);
+        table[x] = i;
+    }
+
+    string h = "", m = "";
+    h += s[0];
+    int code = 256;
+    vector<int> output_code;
+
+    for (int i = 0; i < s.length(); i++) {
+        if (i != s.length() - 1)
+            m += s[i + 1];
+        if (table.find(h + m) != table.end()) {
+            h = h + m;
+        }
+        else {
+
+            output_code.push_back(table[h]);
+            table[h + m] = code;
+            code++;
+            h = m;
+        }
+        m = "";
+    }
+    output_code.push_back(table[h]);
+    return output_code;
+}
+//-------------------
+string decod = "";
+void decoding(vector<int> op)
+{
+    decod = "";
+    unordered_map<int, string> table;
+    for (int i = 0; i <= 255; i++) {
+        string ch = "";
+        ch += char(i);
+        table[i] = ch;
+    }
+    int old = op[0], n;
+    string s = table[old];
+    string c = "";
+    c += s[0];
+    //cout << s;
+    decod += s;
+    int count = 256;
+    for (int i = 0; i < op.size() - 1; i++) {
+        n = op[i + 1];
+        if (table.find(n) == table.end()) {
+            s = table[old];
+            s = s + c;
+        }
+        else {
+            s = table[n];
+        }
+        //cout << s;
+        decod += s;
+        c = "";
+        c += s[0];
+        table[count] = table[old] + c;
+        count++;
+        old = n;
+    }
+}
+//-------------------
+string formatted = "";
+void check_formatting(string s0)
+{
+    formatted = "";
+    int i = 0;
+    vector<string> line_data(s0.length());
+
+    int* op_cl = new int;      //first digit represents opening tag & second closing tag
+    int x[2] = { 0b10 , 0b01 };
+    // s0 = minify3(s0);
+    int found = 0;
+
+    // line_data[0] = "";
+    while (found != -1) {
+        found = s0.find("\n");
+        for (int f = 0; f < found;) {
+            line_data[i] += s0[f];
+            f++;
+        }
+        // cout << line_data[i] << endl;
+        s0.erase(0, found + 1);
+        i++;
+    }
+    for (int k = 0; k < i; k++)
+    {
+
+        *(op_cl + k) = 0b00;
+        for (int j = 0; j < (line_data[k].length()); ) // loop on rows
+        {
+            switch ((line_data[k])[j])
+            {
+            case ' ':
+            {
+                j++;
+                continue;
+                break;
+            }
+            case '<':
+            {
+                if ((line_data[k])[j + 1] == '?' || (line_data[k])[j + 1] == '!')
+                {
+                    while ((line_data[k])[j] != '>')
+                    {
+                        j++;
+                    }
+                    j++;
+                    continue;
+                    break;
+                }
+                else if ((line_data[k])[j + 1] == '/')
+                {
+
+                    *(op_cl + k) |= x[1];
+                    while ((line_data[k])[j] != '>')
+                    {
+                        j++;
+                    }
+                    j++;
+                    continue;
+                    break;
+
+                }
+                else
+                {
+                    *(op_cl + k) |= x[0];
+                    while ((line_data[k])[j] != '>')
+                    {
+                        j++;
+                    }
+                    j++;
+                    continue;
+                    break;
+
+                }
+            }
+            default:
+            {
+                j++;
+                continue;
+                break;
+
+            }
+            }
+        }
+    }
+    int temp = 1;
+    //cout << line_data[0] << endl;
+    formatted += line_data[0] + "\n";
+    for (int m = 0; m < i - 1; m++)
+    {
+        string s = "";
+        switch (op_cl[m])  //loop on lines
+        {
+        case 2:                //opening only
+        {
+            if (op_cl[m + 1] == 2)       //op + op
+            {
+                // one added tap
+                for (int j = 0; j < temp; j++)
+                {
+                    s += "    ";
+                }
+                line_data[m + 1] = s + line_data[m + 1];
+                temp++; //2
+              //  cout << m << line_data[m + 1]<< endl;
+           //     cout <<   line_data[m + 1]<<endl;
+
+            }
+
+            else if (op_cl[m + 1] == 3)       //op + op&cl
+            {
+                // one added tap
+                for (int j = 0; j < temp; j++)
+                {
+                    s += "    ";
+                }
+                line_data[m + 1] = s + line_data[m + 1];
+            }
+
+            else if (op_cl[m + 1] == 0 || op_cl[m + 1] == 1)  // op +text || op + cl
+            {
+                //no added taps
+                for (int j = 0; j < temp; j++)
+                {
+                    s += "    ";
+                }
+                line_data[m + 1] = s + line_data[m + 1];
+            }
+            continue;
+            break;
+        }
+        case 3:               // opening & closing at the same line
+        {
+            if (op_cl[m + 1] == 2)     // (op&cl) + op
+            {
+                //no added taps
+                for (int j = 0; j < temp; j++)
+                {
+                    s += "    ";
+                }
+                line_data[m + 1] = s + line_data[m + 1];
+                temp++;
+                // cout << m << line_data[m + 1]<< endl;
+
+              //  cout <<  line_data[m + 1] << endl;
+
+            }
+
+            else if (op_cl[m + 1] == 3)     // (op&cl) + (op&cl)
+            {
+                //no added taps
+                for (int j = 0; j < temp; j++)
+                {
+                    s += "    ";
+                }
+                line_data[m + 1] = s + line_data[m + 1];
+            }
+
+            else if (op_cl[m + 1] == 1)                     //(op&cl) + cl
+            {
+                //erase1 tap
+                temp--;
+                for (int j = 0; j < temp; j++)
+                {
+                    s += "    ";
+                }
+                line_data[m + 1] = s + line_data[m + 1];
+            }
+            //cout << line_data[m + 1] << endl;
+            formatted += line_data[m+1] + "\n";
+            continue;
+            break;
+        }
+        case 1:             // closing only
+        {
+            if (op_cl[m + 1] == 2)      // cl + op
+            {
+                // no added taps
+                for (int j = 0; j < temp; j++)
+                {
+                    s += "    ";
+                }
+                line_data[m + 1] = s + line_data[m + 1];
+                temp++;
+            }
+
+            else if (op_cl[m + 1] == 3)      // cl + (op&cl)
+            {
+                // no added taps
+                for (int j = 0; j < temp; j++)
+                {
+                    s += "    ";
+                }
+                line_data[m + 1] = s + line_data[m + 1];
+            }
+
+            else if (op_cl[m + 1] == 1)  //cl + cl
+            {
+                //erase1 tap
+                temp--;
+                for (int j = 0; j < temp; j++)
+                {
+                    s += "    ";
+                }
+                line_data[m + 1] = s + line_data[m + 1];
+            }
+            //cout << line_data[m + 1] << endl;
+            formatted += line_data[m+1] + "\n";
+            continue;
+            break;
+        }
+        default:
+        {
+            if (op_cl[m + 1] == 1)  //text + cl
+            {
+                //erase1 tap
+                temp--;
+                for (int j = 0; j < temp; j++)
+                {
+                    s += "    ";
+                }
+                line_data[m + 1] = s + line_data[m + 1];
+
+            }
+
+            else if (op_cl[m + 1] == 0)      // text + text
+            {
+                if (op_cl[m - 1] == 0)   // if the line before it is also text
+                {
+                    for (int j = 0; j < temp; j++)
+                    {
+                        s += "    ";
+                    }
+                    line_data[m + 1] = s + line_data[m + 1];
+                }
+                else if (op_cl[m - 1] != 0)
+                {
+                    for (int j = 0; j < temp; j++)
+                    {
+                        s += "    ";
+                    }
+                    line_data[m + 1] = s + line_data[m + 1];
+                    temp++;
+                }
+
+            }
+            continue;
+            break;
+        }
+        //cout << line_data[m + 1] << endl;
+        formatted += line_data[m+1] + "\n";
+        }
+
+    }
+}
 
 //-------------------
-
 void MainWindow::on_openFile_pushButton_clicked()
 {
     QString file_name = QFileDialog::getOpenFileName(this, "Choose a File", QDir::homePath());
@@ -195,30 +523,233 @@ void MainWindow::on_checkConsistency_pushButton_clicked()
     string new_xml_file = "";
     check_consistency(xml_file, &new_xml_file);
     QString new_xml_q = QString::fromStdString(new_xml_file);
+    ui->output_textBrowser->setText("");
     ui->output_textBrowser->setText(new_xml_q);
 }
 
 void MainWindow::on_reset_pushButton_clicked()
 {
+    ui->output_textBrowser->setText("");
     ui->output_textBrowser->setText(ui->input_textBrowser->toPlainText());
 }
 
 void MainWindow::on_minify_pushButton_clicked()
 {
     QString minified;
+//    QString input_str_q = ui->output_textBrowser->toPlainText();
+//    string input_str = input_str_q.toStdString();
+//    minify3(input_str, &minified);
     QString input_str_q = ui->output_textBrowser->toPlainText();
-    string input_str = input_str_q.toStdString();
-    //minify(input_str, &minified);
-    //minify2(input_str, &minified);
-    minify3(input_str, &minified);
+    minify4(input_str_q, &minified);
+    ui->output_textBrowser->setText("");
     ui->output_textBrowser->setText(minified);
-    //qDebug() << "File minified.\n";
     QMessageBox::information(0, "Done", "File minified");
 }
 
 
 void MainWindow::on_format_pushButton_clicked()
 {
+    string input_str = ui->input_textBrowser->toPlainText().toStdString();
+    check_formatting(input_str);
+    QString output_q = QString::fromStdString(formatted);
+    ui->output_textBrowser->setText("");
+    ui->output_textBrowser->setText(output_q);
 }
 
 
+void MainWindow::on_save_pushButton_clicked()
+{
+    QString filename = "output.xml";
+    QFile file(filename);
+    QFile::remove(filename);
+    if (file.open(QIODevice::ReadWrite)) {
+            QTextStream stream(&file);
+            stream << ui->output_textBrowser->toPlainText();
+    }
+    QMessageBox::information(0, "Done", "Output is saved in a new file with name \"output.xml\"");
+}
+
+vector<int> comp;
+void MainWindow::on_compress_pushButton_clicked()
+{
+    string s = ui->output_textBrowser->toPlainText().toStdString();
+    comp = encoding(s);
+    string comp_str = "";
+    for (int i = 0; i < comp.size(); i++) {
+        comp_str += to_string(comp[i]) + " ";
+    }
+    QString comp_q = QString::fromStdString(comp_str);
+    ui->output_textBrowser->setText("");
+    ui->output_textBrowser->setText(comp_q);
+}
+
+void MainWindow::on_decompress_pushButton_clicked()
+{
+    decoding(comp);
+    QString decod_q = QString::fromStdString(decod);
+    ui->output_textBrowser->setText("");
+    ui->output_textBrowser->setText(decod_q);
+}
+string final_json = "";
+void convert_xmlToJson(string xml_file) {
+    final_json = "";
+    list <string> lst;
+    list <string> saved;
+    for (int i = 0; i < xml_file.length(); i++)
+    {
+        string start = "";
+        string value = "";
+
+        if (xml_file[i] == '<')
+        {
+            switch (xml_file[i + 1]) {
+            case'!':
+                continue;
+                break;
+            case'?':
+                continue;
+                break;
+
+            default: // push into the stack
+            {
+                int k;
+                for (i = i + 1; xml_file[i] != '>'; i++)
+                {
+
+                    start = start + xml_file[i];
+                }
+
+                lst.push_back(start);
+                bool flag = true; // flag to skip the first space in the value
+                for (k = i + 1; xml_file[k] != '<' && k < xml_file.length(); k++) //loop till the opening tag
+                {
+                    if (xml_file[k] == ' ' && xml_file[k - 1] == ' ' || xml_file[k] == ' ' && xml_file[k - 1] == '>' || xml_file[k] == '<' && xml_file[k - 1] == ' ' || xml_file[k] == '\n' || xml_file[k] == '\t') {
+                        //flag = false;
+                        continue;
+                    }
+                    else
+                    {
+                        value = value + xml_file[k];
+                    }
+                }
+                if (value == "") break;
+                else lst.push_back(value); //s.push(value);
+            }
+            }
+        }
+        else continue;
+    }
+    // now you have a list of strings
+
+    auto ptr = lst.begin(); // head of the lst
+
+    list <string> cl_stk;
+    list <string> op_tag;
+
+    bool once = false;
+    string last = ""; // value of last opening tag node
+
+    for (; ptr != lst.end();) { // ptr for
+        string s = *ptr;  // data of the node
+        //in case of opening tag
+        if (s[0] != '/' && s[0] != '  ' && s[0] != '{' && s[0] != '}' && s[0] != ',' && s[0] != '[' && s[0] != ']') { // i added not = ] or [
+
+            if (next(ptr, 1) != lst.end() && next(ptr, 2) != lst.end()) {
+
+                if (*ptr != last) {
+                    saved.push_back(*ptr); // in case it is not the array case
+                    last = *ptr;
+                }
+                else {
+                    //op_tag.push_back(*ptr);
+                    last = *ptr;
+                }
+                string two_next = *next(ptr, 2); // check that it doesn't exceed the list
+                if ('/' + s == two_next) {       // one line xml tags
+                    saved.push_back(*next(ptr)); // push the value
+                    ptr = next(ptr, 2); // increase ptr with 2 ptr  = ptr + 2 to skip the value node
+                    continue;
+                }
+                if ('/' + s != two_next) {  // group opening tag
+                    saved.push_back("{");	//lst.emplace(next(ptr), 1, '{');
+                    ptr++;
+                    continue;
+                }
+            }
+
+        }
+
+        //in case of closing tag
+        if (s[0] == '/') { // increase ptr++
+            string two_prev = *prev(ptr, 2);
+            if (s != '/' + two_prev) { // group closing tag , not one line
+                saved.push_back("}"); //lst.emplace(next(ptr), 1, '}');
+            }
+
+            if (next(ptr) != lst.end())
+            {
+                string next_node = *next(ptr, 1); // check what's after me
+                //in case of name
+                if (next_node[0] != '/' && next_node[0] != '}' && next_node[0] != ',') // the next is a name // edit 2: it won't be any of them as i wrote them in a new list
+                {
+                    saved.push_back(","); //lst.emplace(next(ptr), 1, ',');
+
+                }
+                //next is a name and as my name
+                if (next_node[0] != '/' && s == '/' + next_node) // s = /id , next = id <<<<array []>>
+                {
+                    if (once == false) {
+                        cl_stk.push_front(s); // added /d to stack to remember it
+                        op_tag.push_front(next_node);
+                        once = true; //this end tag saved once
+                    }
+                    /*cl_stk.push_front(s);
+                    op_stk.push_back(next_node);
+                    dlt.push_back(next_node);*/
+                }
+                //when it is the last closing tag on the array
+                if (cl_stk.empty() != true && s == cl_stk.front() && s != '/' + next_node) // /id is == to the top of the stack and the next isn't my name
+                {	//pop /id
+                    saved.push_back("]"); // close the array
+                    cl_stk.pop_front();
+                    once = false;
+                }
+            }
+        }
+        ptr++;
+    }
+
+
+
+    /* to insert the array brackit "[",
+    1- do unique then
+    2- for each node in the saved list check if it's == to the name int the op_tag stack
+    3-then insert [ after it and then pop it */
+
+    op_tag.unique();
+    auto it = saved.begin();
+    for (it = saved.begin(); it != saved.end() && op_tag.empty() != true; it++) {
+        if (*it == op_tag.front()) {
+            saved.emplace(next(it), 1, '[');
+            it++;
+            op_tag.pop_front();
+        }
+    }
+
+    final_json = "";
+    string vlu;
+    auto pt = saved.begin();
+    for (pt = saved.begin(); pt != saved.end(); pt++) {
+        vlu = *pt;
+        final_json = final_json + vlu + "\n";
+    }
+}
+
+void MainWindow::on_convert_pushButton_clicked()
+{
+    string xml_in = ui->input_textBrowser->toPlainText().toStdString();
+    convert_xmlToJson(xml_in);
+    QString json_q = QString::fromStdString(final_json);
+    qDebug() << json_q << "\n";
+    ui->output_textBrowser->setText(json_q);
+}
