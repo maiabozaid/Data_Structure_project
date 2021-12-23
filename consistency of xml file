@@ -1,0 +1,124 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <stack>
+using namespace std;
+
+bool check_consistency(string xml_file)
+{
+    stack <string> s;
+    for (int i = 0; i < xml_file.length(); i++)
+    { 
+        string opening_tag_name = "";
+        string closing_tag_name = "";
+        if (xml_file[i] == '<')
+        {
+            switch (xml_file[i + 1])
+            {
+            case'!':
+                continue;
+                break;
+            case'?':
+                continue;
+                break;
+            case'/':
+            {
+                for (int j = i + 2; xml_file[j] != '>'; j++)
+                {
+                    closing_tag_name = closing_tag_name + xml_file[j];
+                }
+                if (s.top() == closing_tag_name)
+                {
+                        s.pop();
+                }
+                else if (s.top() != closing_tag_name)
+                {
+                    cout << "ERROR! the closing tag " << closing_tag_name << " Not Matching the opening tag " << s.top() << endl;
+                    cout << "SOLVING ERRORS" << endl;
+
+                    /*Assume that if the error is that the closing tag not matching the opening tag,
+                    then the closing tag doesn't exist in the file */
+                    
+                    while (s.top() != closing_tag_name)
+                    {
+                        string closetag = "";
+                        string right_closing_tag = "";
+                        closetag = "</" + closing_tag_name + ">";
+                        right_closing_tag = "</" + s.top() + ">";
+
+                        string data = "";
+                        string opentag_of_right_closing_tag = "<"+ s.top() + ">";
+                        for (int i = xml_file.find(opentag_of_right_closing_tag) + opentag_of_right_closing_tag.length(); xml_file[i] != '<'; i++)
+                        {
+                            data = data + xml_file[i];
+                        }
+                       
+                        if (data == "") 
+                        {
+                            xml_file.insert(xml_file.find(closetag) - 1, right_closing_tag);
+                            s.pop();
+                        }
+                        else
+                        {
+                            xml_file.insert(xml_file.find(data) + data.length(), right_closing_tag);
+                            s.pop();
+                        }
+                        
+                    }
+                    break;
+                }
+                break;
+            }
+            default:
+            {
+                for (int k = i + 1; xml_file[k] != '>'; k++)
+                {
+                    opening_tag_name = opening_tag_name + xml_file[k];
+                }
+                s.push(opening_tag_name);
+                break;
+            }
+            }
+            continue;
+        }
+
+        else
+            continue;
+    }
+
+    if (s.empty())
+    {
+        cout << "The XML File is consistent" << endl;
+        return true;
+    }
+    else
+    {
+        cout << "ERROR! opening tag " << s.top() << " without closing tag " << endl;
+        cout << "SOLVING ERRORS" << endl;
+        while (!s.empty())
+        {
+            string missing_close_tag = "";
+            missing_close_tag = "</" + s.top() + ">";
+            xml_file = xml_file + missing_close_tag;
+            s.pop();
+        }
+        check_consistency(xml_file);
+    }
+}
+
+int main()
+{
+      string xml1 = "<Students> <Student> <Name> Tanver </Name> <RollNo> 312 </RollNo> </Student> ";
+      string xml2 = "<Students> <Student> <Name> Tanver </Name> <RollNo> 312 </RollNo>  ";
+      string xml3 = "<Students> <Student> <Name> Tanver <RollNo> 312 </RollNo> </Student> </Students> ";
+      string xml4 = "<users>\n        <user>\n        <id>1</id>\n        <name>Ahmed Ali</name>\n        <posts>\n        <post>\n        <body>\n        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n        </body>\n        <topics>\n        <topic>\n        economy\n        </topic>\n        <topic>\n        finance\n        </topic>\n        </topics>\n        </post>\n        <post>\n        <body>\n        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n        </body>\n        <topics>\n        <topic>\n        solar_energy\n        </topic>\n        </topics>\n        </post>\n        </posts>\n        <followers>\n        <follower>\n        <id>2</id>\n        </follower>\n        <follower>\n        <id>3</id>\n        </follower>\n        </followers>\n        </user>\n        <user>\n        <id>2</id>\n        <name>Yasser Ahmed</name>\n        <posts>\n        <post>\n        <body>\n        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n        </body>\n        <topics>\n        <topic>\n        education\n        </topic>\n        </topics>\n        </post>\n        </posts>\n        <followers>\n        <follower>\n        <id>1 </id>\n        </follower>\n        </followers>\n        </user>\n        <user>\n        <id>3 </id>\n        <name>Mohamed Sherif</name>\n        <posts>\n        <post>\n        <body>\n        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n        </body>\n        <topics>\n        <topic>\n        sports\n        </topic>\n        </topics>\n        </post>\n        </posts>\n        <followers>\n        <follower>\n        <id>1</id>\n        </follower>\n        </followers>\n        </user>\n        </users>";
+   
+      check_consistency(xml1);
+      cout << "---------------------------------------" << endl;
+      check_consistency(xml2);
+      cout << "---------------------------------------" << endl;
+      check_consistency(xml3);
+      cout << "---------------------------------------" << endl;
+      check_consistency(xml4);
+      cout << "---------------------------------------" << endl;
+}
