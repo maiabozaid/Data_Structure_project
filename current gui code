@@ -1,0 +1,224 @@
+#include "mainwindow.h"
+#include "ui_mainwindow.h"
+#include <iostream>
+#include <QFile>
+#include <QTextStream>
+#include <QMessageBox>
+#include <QFileDialog>
+#include <QDir>
+#include <regex>
+#include <QtDebug>
+#include <QRegularExpression>
+#include <stack>
+#include <QStack>
+#include <vector>
+#include <string>
+using namespace std;
+
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::MainWindow)
+{
+    ui->setupUi(this);
+}
+MainWindow::~MainWindow()
+{
+    delete ui;
+}
+
+//-------------------
+void minify(string str1, QString* min) {
+    for (int i = 0; i < str1.length(); i++) {
+        if (str1[i] == ' ' || str1[i] == '\n') {
+            str1.erase(i, 1);
+            i--;
+        }
+    }
+    *min = QString::fromStdString(str1);
+}
+//-------------------
+void minify2(string str1, QString* min) {
+    regex ex(">( +|\n)+<");
+    string str2 = regex_replace(str1, ex, "><");
+    QString s = QString::fromStdString(str2);
+    QDebug q(&s);
+    //*min = QString::fromStdString(str2);
+}
+//-------------------
+void minify3(string str1, QString* min) {
+    QRegularExpression ex(">( *\n|\n *)+<");
+    QString s = QString::fromStdString(str1);
+    s.replace(QRegularExpression(ex), "><");
+    *min = s;
+}
+//-------------------
+void check_consistency(string xml_file, string* new_xml_file)
+{
+    stack<string> s;
+    *new_xml_file = xml_file;
+    for (int i = 0; i < (*new_xml_file).length(); i++)
+    {
+        string opening_tag_name = "";
+        string closing_tag_name = "";
+        if ((*new_xml_file)[i] == '<')
+        {
+            switch ((*new_xml_file)[i + 1])
+            {
+            case'!':
+                continue;
+                break;
+            case'?':
+                continue;
+                break;
+            case'/':
+            {
+                for (int j = i + 2; (*new_xml_file)[j] != '>'; j++)
+                {
+                    closing_tag_name = closing_tag_name + (*new_xml_file)[j];
+                }
+                if (s.top() == closing_tag_name)
+                {
+                    s.pop();
+                }
+                else if (s.top() != closing_tag_name)
+                {
+                    string er_str = "the closing tag " + closing_tag_name + " Not Matching the opening tag " + s.top() + "\n";
+                    QString er = QString::fromStdString(er_str);
+                    QMessageBox::information(0, "ERROR!", er);
+                    string er_str2 = "SOLVING ERRORS\n";
+                    QString er2 = QString::fromStdString(er_str2);
+                    QMessageBox::information(0, "ERROR!", er2);
+
+
+                    /*Assume that if the error is that the closing tag not matching the opening tag,
+                    then the closing tag doesn't exist in the file */
+
+                    while (s.top() != closing_tag_name)
+                    {
+                        string closetag = "";
+                        string right_closing_tag = "";
+                        closetag = "</" + closing_tag_name + ">";
+                        right_closing_tag = "</" + s.top() + ">";
+
+                        string data = "";
+                        string opentag_of_right_closing_tag = "<" + s.top() + ">";
+                        for (int i = (*new_xml_file).find(opentag_of_right_closing_tag) + opentag_of_right_closing_tag.length(); (*new_xml_file)[i] != '<'; i++)
+                        {
+                            data = data + (*new_xml_file)[i];
+                        }
+
+                        if (data == "")
+                        {
+                            (*new_xml_file).insert((*new_xml_file).find(closetag) - 1, right_closing_tag);
+                            s.pop();
+                        }
+                        else
+                        {
+                            (*new_xml_file).insert((*new_xml_file).find(data) + data.length(), right_closing_tag);
+                            s.pop();
+                        }
+                    }
+                    break;
+                }
+                break;
+            }
+            default:
+            {
+                for (int k = i + 1; (*new_xml_file)[k] != '>'; k++)
+                {
+                    opening_tag_name = opening_tag_name + (*new_xml_file)[k];
+                }
+                s.push(opening_tag_name);
+                break;
+            }
+            }
+            continue;
+        }
+
+        else
+            continue;
+    }
+//    cout << "stack size: " << s.size() << endl;
+//    cout << "stack top: " << s.top() << endl;
+
+    if (s.empty())
+    {
+        cout << "The XML File is consistent" << endl;
+        //cout << "File: \n" << (*new_xml_file) << endl;
+        string str = "The XML File is consistent";
+        QString qstr = QString::fromStdString(str);
+        QMessageBox::information(0, "Successful!", qstr);
+        cout << "stack empty" << endl;
+        return;
+    }
+    else
+    {
+        string str = "ERROR! opening tag " + s.top() + " without closing tag \n";
+        QString qstr = QString::fromStdString(str);
+        QMessageBox::information(0, "ERROR!", qstr);
+        string str2 = "SOLVING ERRORS";
+        QString qstr2 = QString::fromStdString(str2);
+        QMessageBox::information(0, "ERROR!", qstr2);
+        cout << "outside while" << endl;
+        while (!s.empty())
+        {
+            string missing_close_tag = "";
+            missing_close_tag = "</" + s.top() + ">";
+            (*new_xml_file) = (*new_xml_file) + missing_close_tag;
+            cout << "stack top = " << s.top() << endl;
+            s.pop();
+            cout << "stack popped" <<endl;
+            cout << s.empty() << endl;
+        }
+        check_consistency(xml_file, new_xml_file);
+    }
+
+}
+//-------------------
+
+//-------------------
+
+void MainWindow::on_openFile_pushButton_clicked()
+{
+    QString file_name = QFileDialog::getOpenFileName(this, "Choose a File", QDir::homePath());
+    QFile file(file_name);
+    if (!file.open(QIODevice::ReadOnly))
+        QMessageBox::information(0, "info", file.errorString());
+    QTextStream in(&file);
+    ui->input_textBrowser->setText(in.readAll());
+    ui->output_textBrowser->setText(ui->input_textBrowser->toPlainText());
+}
+
+void MainWindow::on_checkConsistency_pushButton_clicked()
+{
+    string xml_file = (ui->output_textBrowser->toPlainText()).toStdString();
+    string new_xml_file = "";
+    check_consistency(xml_file, &new_xml_file);
+    QString new_xml_q = QString::fromStdString(new_xml_file);
+    ui->output_textBrowser->setText(new_xml_q);
+}
+
+void MainWindow::on_reset_pushButton_clicked()
+{
+    ui->output_textBrowser->setText(ui->input_textBrowser->toPlainText());
+}
+
+void MainWindow::on_minify_pushButton_clicked()
+{
+    QString minified;
+    QString input_str_q = ui->output_textBrowser->toPlainText();
+    string input_str = input_str_q.toStdString();
+    //minify(input_str, &minified);
+    //minify2(input_str, &minified);
+    minify3(input_str, &minified);
+    ui->output_textBrowser->setText(minified);
+    //qDebug() << "File minified.\n";
+    QMessageBox::information(0, "Done", "File minified");
+}
+
+
+void MainWindow::on_format_pushButton_clicked()
+{
+}
+
+
