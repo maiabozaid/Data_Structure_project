@@ -195,8 +195,17 @@ int main() {
 		cout << *pt << '\n';
 
 	}
+	
+	/* or 
+	string final = ""; 
+		auto pt = saved.begin();
+		for (pt = saved.begin(); pt != saved.end(); pt++) {
 
+			final = final + *pt + "\n"; 
 
+      		}
+	
+	 */
 
 
 }
