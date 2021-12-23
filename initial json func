@@ -11,22 +11,19 @@ using namespace std;
 int main() {
 	//do try ...catch to convert string into number
 
+	//code proplem is only with the array brakits and repeating the non consecutive opening tags with same name
 
-	list <string> op_stk;
-	list <string> cl_stk;
-	list <string> dlt;
 
 	list <string> lst;
 	list <string> saved;
 
-	string xml_file = "<users>       <user>       <id>1</id>       <name>Ahmed Ali</name>        <posts>      <post>        <body>        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.        </body>        <topics>        <topic>        economy        </topic>        <topic>        finance        </topic>        </topics>        </post>        <post>        <body>        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.        </body>        <topics>        <topic>        solar_energy        </topic>        </topics>        </post>        </posts>        <followers>        <follower>        <id>2</id>        </follower>        <follower>        <id>3</id>        </follower>        </followers>        </user>        <user>        <id>2</id>        <name>Yasser Ahmed</name>        <posts>        <post>        <body>        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.        </body>        <topics>        <topic>        education        </topic>        </topics>        </post>        </posts>        <followers>        <follower>        <id>1 </id>        </follower>        </followers>        </user>        <user>        <id>3 </id>        <name>Mohamed Sherif</name>        <posts>        <post>        <body>        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.        </body>        <topics>        <topic>        sports        </topic>        </topics>        </post>        </posts>        <followers>        <follower>        <id>1</id>        </follower>        </followers>        </user>        </users>";
+	string xml_file = "<users>			<user> <id>1</id>  <name> Ahmed Ali </name>    <posts>      <post>        <body>       bla bla bla        </body>        <topics>        <topic>        economy        </topic>        <topic>        finance        </topic>        </topics>        </post>        <post>        <body>    bla       </body>        <topics>        <topic>        solar_energy        </topic>        </topics>        </post>        </posts>        <followers>        <follower>        <id>2</id>        </follower>        <follower>        <id>3</id>        </follower>        </followers>        </user>        <user>        <id>2</id>        <name>Yasser Ahmed</name>        <posts>        <post>        <body>        Lorem      </body>        <topics>        <topic>        education        </topic>        </topics>        </post>        </posts>        <followers>        <follower>        <id>1 </id>        </follower>        </followers>        </user>        <user>        <id>3 </id>        <name>Mohamed Sherif</name>        <posts>        <post>        <body>        Lorem     </body>        <topics>        <topic>        sports        </topic>        </topics>        </post>        </posts>        <followers>        <follower>        <id>1</id>        </follower>        </followers>        </user>        </users>";
 	//"<user> <id>4</id> <id>3</id> </user>";
 
 	for (int i = 0; i < xml_file.length(); i++)
 	{
 		string start = "";
 		string value = "";
-		//cout << xml_file[i];
 
 		if (xml_file[i] == '<')
 		{
@@ -51,17 +48,16 @@ int main() {
 				bool flag = true; // flag to skip the first space in the value
 				for (k = i + 1; xml_file[k] != '<' && k < xml_file.length(); k++) //loop till the opening tag
 				{
-					if (xml_file[k] == ' ' && flag == true) {
-						flag = false;
+					if (xml_file[k] == ' ' && xml_file[k-1] == ' ' || xml_file[k] == ' ' && xml_file[k - 1] == '>' || xml_file[k] == '<' && xml_file[k - 1] == ' ' || xml_file[k] == '\n' || xml_file[k] == '\t') {
+						//flag = false;
 						continue;
 					}
-					//if (xml_file[k] == '  ') continue;
 					else
 					{
 						value = value + xml_file[k];
 					}
 				}
-				if (value == "") break;
+				if (value == "" ) break;
 				else lst.push_back(value); //s.push(value);
 			}
 			}
@@ -69,29 +65,34 @@ int main() {
 		else continue;
 	}
 
+
+
+
+
 	// now you have a list of strings
-	//1) handle the array case in the opening tag
 
-
-	list <string> op_tag;
 	auto ptr = lst.begin(); // head of the lst
+	
+	list <string> cl_stk;
+	list <string> op_tag;
 
 
 	bool once = false;
-	string last = "";
+	string last = ""; // value of last opening tag node
+
 	for (; ptr != lst.end();) { // ptr for 
 		string s = *ptr;  // data of the node
 		//in case of opening tag
-		if (s[0] != '/' && s[0] != '{' && s[0] != '}' && s[0] != ',' && s[0] != '[' && s[0] != ']') { // i added not = ] or [
+		if (s[0] != '/' && s[0] != '  ' && s[0] != '{' && s[0] != '}' && s[0] != ',' && s[0] != '[' && s[0] != ']') { // i added not = ] or [
 
-			//if (next(ptr, 2) != lst.end()) {
+		if (next(ptr, 1) != lst.end() && next(ptr, 2) != lst.end()) {
 
 			if (*ptr != last) {
 				saved.push_back(*ptr); // in case it is not the array case
 				last = *ptr;
 			}
 			else {
-				op_tag.push_back(*ptr);
+				//op_tag.push_back(*ptr);
 				last = *ptr;
 			}
 			string two_next = *next(ptr, 2); // check that it doesn't exceed the list
@@ -100,12 +101,12 @@ int main() {
 				ptr = next(ptr, 2); // increase ptr with 2 ptr  = ptr + 2 to skip the value node 
 				continue;
 			}
-			else {  // group opening tag
+			if ('/' + s != two_next) {  // group opening tag
 				saved.push_back("{");	//lst.emplace(next(ptr), 1, '{');
 				ptr++;
 				continue;
 			}
-			//}
+		}
 
 		}
 
@@ -128,16 +129,17 @@ int main() {
 				//next is a name and as my name
 				if (next_node[0] != '/' && s == '/' + next_node) // s = /id , next = id <<<<array []>>
 				{
-					if (once == false) {
+					if (once == false) { 
 						cl_stk.push_front(s); // added /d to stack to remember it 
-						once = true;
+						op_tag.push_front(next_node);
+						once = true; //this end tag saved once
 					}
 					/*cl_stk.push_front(s);
 					op_stk.push_back(next_node);
 					dlt.push_back(next_node);*/
 				}
 				//when it is the last closing tag on the array
-				if (s == cl_stk.front() && s != '/' + next_node) // /id is == to the top of the stack and the next isn't my name
+				if (cl_stk.empty() != true && s == cl_stk.front() && s != '/' + next_node) // /id is == to the top of the stack and the next isn't my name
 				{	//pop /id
 					saved.push_back("]"); // close the array
 					cl_stk.pop_front();
@@ -165,72 +167,6 @@ int main() {
 		}
 	}
 
-
-
-	///////////////////////// do unique to add single brackits 
-	//op_stk.unique();
-	//cl_stk.unique();
-
-
-	//// <<<<< insert [ >>>>>>>>>>>>>>
-	//auto frt = lst.begin(); // tail
-
-	//for (; op_stk.empty() != true; frt++) {
-	//	if (*frt == op_stk.front()) {
-
-	//		lst.emplace(next(frt), 1, '[');
-	//		op_stk.pop_front();
-
-	//	}
-	//}
-
-	//// <<<<< insert ] >>>>>>>>>>>>>>
-	//auto bck = lst.end(); // tail
-	//bck--;
-
-
-	//for (; cl_stk.empty() != true; bck--) {
-	//	if (*bck == cl_stk.front()) {
-
-	//		lst.emplace(bck, 1, ']');
-	//		cl_stk.pop_front();
-
-	//	}
-	//}
-
-	//// <<<<<<<<< delete repeated elements >>>>>>>>>>>>>
-
-	//auto to_be_dlted = lst.begin(); // tail
-
-	//int count = 1;
-
-	//for (; to_be_dlted != lst.end(); ) {
-	//	string s = *to_be_dlted;
-	//	if (dlt.empty() != true && s == dlt.front()) {
-	//		if (count == 1) {
-	//			count++;
-	//			to_be_dlted++;
-	//			continue;
-	//		}
-
-	//		to_be_dlted = next(to_be_dlted);
-	//		lst.erase(prev(to_be_dlted));
-	//		string check = dlt.front(); 	// check if the next is as my name and if it doesn't : make count == 1 again
-	//		dlt.pop_front();
-	//		if (dlt.empty() != true) {
-	//			if (check != dlt.front()) count = 1;
-	//		}
-	//		continue;
-
-	//	}
-	//	if (s[0] == '/') {
-	//		to_be_dlted = next(to_be_dlted); //swap between next & prev
-	//		lst.erase(prev(to_be_dlted));
-	//		continue;
-	//	}
-	//	to_be_dlted++;
-	//}
-	//// delete all closing tag
 
 	auto pt = saved.begin();
 	for (pt = saved.begin(); pt != saved.end(); pt++) {
