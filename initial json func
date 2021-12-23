@@ -9,16 +9,16 @@ using namespace std;
 
 
 int main() {
-	//do try ...catch to convert string into number
 
-	//code proplem is only with the array brakits and repeating the non consecutive opening tags with same name
 
 
 	list <string> lst;
 	list <string> saved;
 
-	string xml_file = "<users>			<user> <id>1</id>  <name> Ahmed Ali </name>    <posts>      <post>        <body>       bla bla bla        </body>        <topics>        <topic>        economy        </topic>        <topic>        finance        </topic>        </topics>        </post>        <post>        <body>    bla       </body>        <topics>        <topic>        solar_energy        </topic>        </topics>        </post>        </posts>        <followers>        <follower>        <id>2</id>        </follower>        <follower>        <id>3</id>        </follower>        </followers>        </user>        <user>        <id>2</id>        <name>Yasser Ahmed</name>        <posts>        <post>        <body>        Lorem      </body>        <topics>        <topic>        education        </topic>        </topics>        </post>        </posts>        <followers>        <follower>        <id>1 </id>        </follower>        </followers>        </user>        <user>        <id>3 </id>        <name>Mohamed Sherif</name>        <posts>        <post>        <body>        Lorem     </body>        <topics>        <topic>        sports        </topic>        </topics>        </post>        </posts>        <followers>        <follower>        <id>1</id>        </follower>        </followers>        </user>        </users>";
-	//"<user> <id>4</id> <id>3</id> </user>";
+	string xml_file = "<users>	<user> <posts> <post>	<topics>		<topic>		economy		</topic>		<topic>		finance		</topic>		</topics>		</post>		<post>		<topics>		<topic>		solar_energy		</topic>		</topics>		</post>		</posts>		<followers>		<follower>		<id>2 </id>		</follower>		<follower>		<id>3 </id>		</follower>		</followers>		</user>		<user>		<posts> <post>		<topics>		<topic>		education		</topic>		</topics>		</post>		</posts> 		<followers> 		<follower> 		<id>1 </id> 		</follower> 		</followers> 		</user> </users>";
+	// detecting errors file: "<users>	<user> <id>1 </id> <name>Ahmed Ali</name> <posts> <post> <body>		first body		</body>		<topics>		<topic>		economy		</topic>		<topic>		finance		</topic>		</topics>		</post>		<post>		<body>		first body		</body>		<topics>		<topic>		solar_energy		</topic>		</topics>		</post>		</posts>		<followers>		<follower>		<id>2 </id>		</follower>		<follower>		<id>3 </id>		</follower>		</followers>		</user>		<user>		<id>2 </id>		<name>Yasser Ahmed</name>		<posts> <post>		<body>	3rd body</body>		<topics>		<topic>		education		</topic>		</topics>		</post>		</posts> 		<followers> 		<follower> 		<id>1 </id> 		</follower> 		</followers> 		</user> </users>";
+	//original file:	//"<users>			<user> <id>1</id>  <name> Ahmed Ali </name>    <posts>      <post>        <body>       bla bla bla        </body>        <topics>        <topic>        economy        </topic>        <topic>        finance        </topic>        </topics>        </post>        <post>        <body>    bla       </body>        <topics>        <topic>        solar_energy        </topic>        </topics>        </post>        </posts>        <followers>        <follower>        <id>2</id>        </follower>        <follower>        <id>3</id>        </follower>        </followers>        </user>        <user>        <id>2</id>        <name>Yasser Ahmed</name>        <posts>        <post>        <body>        Lorem      </body>        <topics>        <topic>        education        </topic>        </topics>        </post>        </posts>        <followers>        <follower>        <id>1 </id>        </follower>        </followers>        </user>        <user>        <id>3 </id>        <name>Mohamed Sherif</name>        <posts>        <post>        <body>        Lorem     </body>        <topics>        <topic>        sports        </topic>        </topics>        </post>        </posts>        <followers>        <follower>        <id>1</id>        </follower>        </followers>        </user>        </users>";
+	//siimple test:     "<user> <id>4</id> <id>3</id> </user>";
 
 	for (int i = 0; i < xml_file.length(); i++)
 	{
@@ -75,25 +75,28 @@ int main() {
 	
 	list <string> cl_stk;
 	list <string> op_tag;
-
+	stack <string> last;
+	list <string> temp;
 
 	bool once = false;
-	string last = ""; // value of last opening tag node
+	//string last = ""; // value of last opening tag node
 
 	for (; ptr != lst.end();) { // ptr for 
 		string s = *ptr;  // data of the node
 		//in case of opening tag
 		if (s[0] != '/' && s[0] != '  ' && s[0] != '{' && s[0] != '}' && s[0] != ',' && s[0] != '[' && s[0] != ']') { // i added not = ] or [
 
-		if (next(ptr, 1) != lst.end() && next(ptr, 2) != lst.end()) {
+		if (next(ptr, 1) != lst.end() && next(ptr, 2) != lst.end()) { //check there is next and after next
 
-			if (*ptr != last) {
+			string z = "";
+			if (!last.empty()) z = last.top(); 
+			if ( *ptr != z ) {
 				saved.push_back(*ptr); // in case it is not the array case
-				last = *ptr;
+				//last = *ptr;           ///<<<<edit 1: comment this line and make last = op_stk.front or make it in a separate stalk if you will change in op_tag stalk 
 			}
 			else {
 				//op_tag.push_back(*ptr);
-				last = *ptr;
+				last.pop();
 			}
 			string two_next = *next(ptr, 2); // check that it doesn't exceed the list
 			if ('/' + s == two_next) {       // one line xml tags
@@ -117,7 +120,7 @@ int main() {
 				saved.push_back("}"); //lst.emplace(next(ptr), 1, '}');
 			}
 
-			if (next(ptr) != lst.end())
+			if (next(ptr) != lst.end()) //not exceed the length
 			{
 				string next_node = *next(ptr, 1); // check what's after me 
 				//in case of name
@@ -130,20 +133,52 @@ int main() {
 				if (next_node[0] != '/' && s == '/' + next_node) // s = /id , next = id <<<<array []>>
 				{
 					if (once == false) { 
+						last.push(next_node);
 						cl_stk.push_front(s); // added /d to stack to remember it 
-						op_tag.push_front(next_node);
 						once = true; //this end tag saved once
+						//temp = saved;
+						auto srch = saved.end();
+						srch--;
+						for (; srch != saved.begin();) { //current pose , iterate -- till the required value )
+						 // <<<<<<<<<<>>>>>>>>>>>>>>
+							//string vlu = *srch;
+						//	if (*srch != next_node) //the required one so get its postion{
+						//	{
+						//		srch--;
+						//		continue;
+						//	}
+						//	saved.emplace(next(srch), 1, '[');
+						//	break;
+						//}
+						
+//       				op_tag.push_front(next_node);  /////// <<<< possible edit 1 >>>>>> -----> remove : op_tag.push_front(next_node);
 					}
-					/*cl_stk.push_front(s);
-					op_stk.push_back(next_node);
-					dlt.push_back(next_node);*/
+				
 				}
 				//when it is the last closing tag on the array
-				if (cl_stk.empty() != true && s == cl_stk.front() && s != '/' + next_node) // /id is == to the top of the stack and the next isn't my name
+				if (cl_stk.empty() != true && s == cl_stk.front() && s != '/' + next_node) // /id is (the last one )== to the top of the stack and the next isn't my name
 				{	//pop /id
 					saved.push_back("]"); // close the array
 					cl_stk.pop_front();
 					once = false;
+
+					auto srch = saved.end();
+					srch--;
+					for (; srch != saved.begin();) { //current pose , iterate -- till the required value )
+					 // <<<<<<<<<<>>>>>>>>>>>>>>
+						//string vlu = *srch;
+						if (*srch != next_node) //the required one so get its postion{
+						{
+							srch--;
+							continue;
+						}
+						saved.emplace(next(srch), 1, '[');
+						break;
+					}
+
+				
+
+
 				}
 			}
 		}
@@ -152,20 +187,6 @@ int main() {
 
 
 
-	/* to insert the array brackit "[",
-	1- do unique then
-	2- for each node in the saved list check if it's == to the name int the op_tag stack
-	3-then insert [ after it and then pop it */
-
-	op_tag.unique();
-	auto it = saved.begin();
-	for (it = saved.begin(); it != saved.end() && op_tag.empty() != true; it++) {
-		if (*it == op_tag.front()) {
-			saved.emplace(next(it), 1, '[');
-			it++;
-			op_tag.pop_front();
-		}
-	}
 
 
 	auto pt = saved.begin();
@@ -179,6 +200,3 @@ int main() {
 
 
 }
-// *next(ptr,2) value of the node next the current with 2 positions
-// next(ptr,2)   node after current node by two positions
-// prev(ptr,0) current node ;
