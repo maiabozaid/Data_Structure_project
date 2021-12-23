@@ -1,0 +1,169 @@
+
+#include <iostream>
+#include <vector>
+#include <string>
+#include <unordered_map>
+#include <bits/stdc++.h>
+using namespace std;
+
+
+vector<int> encoding(string s)
+{
+	
+	unordered_map<string, int> table;
+	for (int i = 0; i <= 255; i++) {
+		string x = "";
+		x += char(i);
+		table[x] = i;
+	}
+
+	string h = "", m = "";
+	h += s[0];
+	int code = 256;
+	vector<int> output_code;
+	
+	for (int i = 0; i < s.length(); i++) {
+		if (i != s.length() - 1)
+			m += s[i + 1];
+		if (table.find(h + m) != table.end()) {
+			h = h + m;
+		}
+		else {
+			
+			output_code.push_back(table[h]);
+			table[h + m] = code;
+			code++;
+			h = m;
+		}
+		m = "";
+	}
+	
+	output_code.push_back(table[h]);
+	return output_code;
+}
+
+void decoding(vector<int> op)
+{
+	
+	unordered_map<int, string> table;
+	for (int i = 0; i <= 255; i++) {
+		string x = "";
+		x += char(i);
+		table[i] = x;
+	}
+	int old = op[0], n;
+	string s = table[old];
+	string c = "";
+	c += s[0];
+	
+	int count = 256;
+	for (int i = 0; i < op.size() - 1; i++) {
+		n = op[i + 1];
+		if (table.find(n) == table.end()) {
+			s = table[old];
+			s = s + c;
+		}
+		else {
+			s = table[n];
+		}
+		
+		c = "";
+		c += s[0];
+		table[count] = table[old] + c;
+		count++;
+		old = n;
+	}
+}
+int main()
+{
+
+	string s = "<users>\
+		<user>\
+		< id>1 < / id >\
+		<name>Ahmed Ali< / name>\
+		<posts>\
+		<post>\
+		<body>\
+		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\
+		< / body>\
+		<topics>\
+		<topic>\
+		economy\
+		< / topic>\
+		<topic>\
+		finance\
+		< / topic>\
+		< / topics>\
+		< / post>\
+		<post>\
+		<body>\
+		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\
+		< / body>\
+		<topics>\
+		<topic>\
+		solar_energy\
+		< / topic>\
+		< / topics>\
+		< / post>\
+		< / posts>\
+		<followers>\
+		<follower>\
+		< id>2 < / id >\
+		< / follower>\
+		<follower>\
+		< id>3 < / id >\
+		< / follower>\
+		< / followers>\
+		< / user>\
+		<user>\
+		< id>2 < / id >\
+		<name>Yasser Ahmed< / name>\
+		<posts>\
+		<post>\
+		<body>\
+		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\
+		< / body>\
+		<topics>\
+		<topic>\
+		education\
+		< / topic>\
+		< / topics>\
+		< / post>\
+		< / posts>\
+		<followers>\
+		<follower>\
+		< id>1 < / id >\
+		< / follower>\
+		< / followers>\
+		< / user>\
+		<user>\
+		< id>3 < / id >\
+		<name>Mohamed Sherif< / name>\
+		<posts>\
+		<post>\
+		<body>\
+		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\
+		< / body>\
+		<topics>\
+		<topic>\
+		sports\
+		< / topic>\
+		< / topics>\
+		< / post>\
+		< / posts>\
+		<followers>\
+		<follower>\
+		< id>1 < / id >\
+		< / follower>\
+		< / followers>\
+		< / user>\
+		< / users>";
+	vector<int> output_code = encoding(s);
+	cout << " Output Codes : ";
+	for (int i = 0; i < output_code.size(); i++) {
+		cout << output_code[i] << " ";
+	}
+	cout << endl;
+	decoding(output_code);
+}
+
