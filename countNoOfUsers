@@ -1,0 +1,42 @@
+void countNoOfUsers(string xml_file, int* n) {
+    *n = 0;
+    string prev_opening_tag = "";
+    for (int i = 0; i < xml_file.length(); i++)
+    {
+        string opening_tag_name = "";
+        if (xml_file[i] == '<')
+        {
+            switch (xml_file[i + 1])
+            {
+            case'!':
+                continue;
+                break;
+            case'?':
+                continue;
+                break;
+            case'/':
+            {
+                continue;
+                break;
+            }
+            default:
+            {
+                int k;
+                string id_str = "";
+                for (k = i + 1; xml_file[k] != '>'; k++)
+                {
+                    opening_tag_name = opening_tag_name + xml_file[k];
+                }
+                if (opening_tag_name.compare("id") == 0 && prev_opening_tag.compare("user") == 0) {
+                    (*n)++;
+                }
+                prev_opening_tag = opening_tag_name;
+                break;
+            }
+            }
+            continue;
+        }
+        else
+            continue;
+    }
+}
