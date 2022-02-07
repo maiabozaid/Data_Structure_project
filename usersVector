@@ -1,0 +1,56 @@
+void usersVector(string xml_file, vector<vector<int>>* ids) {
+    string prev_opening_tag = "";
+    int user_id = 0;
+    for (int i = 0; i < xml_file.length(); i++)
+    {
+        string opening_tag_name = "";
+        if (xml_file[i] == '<')
+        {
+            switch (xml_file[i + 1])
+            {
+            case'!':
+                continue;
+                break;
+            case'?':
+                continue;
+                break;
+            case'/':
+            {
+                continue;
+                break;
+            }
+            default:
+            {
+                int k;
+                int id_int;
+                string id_str = "";
+                for (k = i + 1; xml_file[k] != '>'; k++)
+                {
+                    opening_tag_name = opening_tag_name + xml_file[k];
+                }
+                if (opening_tag_name.compare("id")==0 && prev_opening_tag.compare("user")==0) {
+                    for (int j = k + 1; xml_file[j] != '<'; j++) {
+                        id_str += xml_file[j];
+                    }
+                    id_int = stoi(id_str);
+                    user_id = id_int;
+                    (*ids)[user_id - 1].push_back(id_int);
+                }
+                else if (opening_tag_name.compare("id") == 0 && prev_opening_tag.compare("follower") == 0) {
+                    for (int j = k + 1; xml_file[j] != '<'; j++) {
+                        id_str += xml_file[j];
+                    }
+                    id_int = stoi(id_str);
+                    (*ids)[user_id - 1].push_back(id_int);
+                }
+                prev_opening_tag = opening_tag_name;
+                break;
+            }
+            }
+            continue;
+        }
+
+        else
+            continue;
+    }
+}
