@@ -6,19 +6,13 @@
 using namespace std;
 
 
-
-
 int main() {
-
-
 
 	list <string> lst;
 	list <string> saved;
 
-	string xml_file = "<users>	<user> <posts> <post>	<topics>		<topic>		economy		</topic>		<topic>		finance		</topic>		</topics>		</post>		<post>		<topics>		<topic>		solar_energy		</topic>		</topics>		</post>		</posts>		<followers>		<follower>		<id>2 </id>		</follower>		<follower>		<id>3 </id>		</follower>		</followers>		</user>		<user>		<posts> <post>		<topics>		<topic>		education		</topic>		</topics>		</post>		</posts> 		<followers> 		<follower> 		<id>1 </id> 		</follower> 		</followers> 		</user> </users>";
-	// detecting errors file: "<users>	<user> <id>1 </id> <name>Ahmed Ali</name> <posts> <post> <body>		first body		</body>		<topics>		<topic>		economy		</topic>		<topic>		finance		</topic>		</topics>		</post>		<post>		<body>		first body		</body>		<topics>		<topic>		solar_energy		</topic>		</topics>		</post>		</posts>		<followers>		<follower>		<id>2 </id>		</follower>		<follower>		<id>3 </id>		</follower>		</followers>		</user>		<user>		<id>2 </id>		<name>Yasser Ahmed</name>		<posts> <post>		<body>	3rd body</body>		<topics>		<topic>		education		</topic>		</topics>		</post>		</posts> 		<followers> 		<follower> 		<id>1 </id> 		</follower> 		</followers> 		</user> </users>";
-	//original file:	//"<users>			<user> <id>1</id>  <name> Ahmed Ali </name>    <posts>      <post>        <body>       bla bla bla        </body>        <topics>        <topic>        economy        </topic>        <topic>        finance        </topic>        </topics>        </post>        <post>        <body>    bla       </body>        <topics>        <topic>        solar_energy        </topic>        </topics>        </post>        </posts>        <followers>        <follower>        <id>2</id>        </follower>        <follower>        <id>3</id>        </follower>        </followers>        </user>        <user>        <id>2</id>        <name>Yasser Ahmed</name>        <posts>        <post>        <body>        Lorem      </body>        <topics>        <topic>        education        </topic>        </topics>        </post>        </posts>        <followers>        <follower>        <id>1 </id>        </follower>        </followers>        </user>        <user>        <id>3 </id>        <name>Mohamed Sherif</name>        <posts>        <post>        <body>        Lorem     </body>        <topics>        <topic>        sports        </topic>        </topics>        </post>        </posts>        <followers>        <follower>        <id>1</id>        </follower>        </followers>        </user>        </users>";
-	//siimple test:     "<user> <id>4</id> <id>3</id> </user>";
+	string xml_file = " <user> <id> 4 </id> <id> 3 </id> </user> <user> <id> 5 </id> </user> ";
+
 
 	for (int i = 0; i < xml_file.length(); i++)
 	{
@@ -37,152 +31,130 @@ int main() {
 
 			default: // push into the stack 
 			{
-				int k;
+				//for tag
 				for (i = i + 1; xml_file[i] != '>'; i++)
 				{
-
 					start = start + xml_file[i];
 				}
-
 				lst.push_back(start);
-				bool flag = true; // flag to skip the first space in the value
+
+				//for value
+				int k;
 				for (k = i + 1; xml_file[k] != '<' && k < xml_file.length(); k++) //loop till the opening tag
-				{
-					if (xml_file[k] == ' ' && xml_file[k - 1] == ' ' || xml_file[k] == ' ' && xml_file[k - 1] == '>' || xml_file[k] == '<' && xml_file[k - 1] == ' ' || xml_file[k] == '\n' || xml_file[k] == '\t') {
-						//flag = false;
-						continue;
-					}
-					else
-					{
-						value = value + xml_file[k];
-					}
+				{  //not value
+					if (xml_file[k] == ' ' && xml_file[k - 1] == ' ' || xml_file[k] == ' ' && xml_file[k - 1] == '>' || xml_file[k] == '<' && xml_file[k - 1] == ' ' || xml_file[k] == '\n' || xml_file[k] == '\t') continue;
+					else value = value + xml_file[k]; // a value
 				}
-				if (value == "") break;
-				else lst.push_back(value); //s.push(value);
+				if (value != "") lst.push_back(value);
+
 			}
-			}
+			} // switch brackit		
 		}
-		else continue;
+		else continue; // if not "<" 
 	}
 
 
 
 
 
-	// now you have a list of strings
+
+
+	// now we have a list of the tags and values 
+
+
+
 
 	auto ptr = lst.begin(); // head of the lst
+	stack <string> cls_square_b ;
 
-	list <string> cl_stk;
-	list <string> op_tag;
-	stack <string> last;
-	list <string> temp;
-
-	bool once = false;
-	//string last = ""; // value of last opening tag node
-
-	for (; ptr != lst.end();) { // ptr for 
+	// we turn from lst to saved
+	for (; ptr != lst.end();) {
 		string s = *ptr;  // data of the node
-		//in case of opening tag
+
+		//in case of opening tag ,, and here there is 2 cases add value or add group brackit
 		if (s[0] != '/' && s[0] != '  ' && s[0] != '{' && s[0] != '}' && s[0] != ',' && s[0] != '[' && s[0] != ']') { // i added not = ] or [
 
 			if (next(ptr, 1) != lst.end() && next(ptr, 2) != lst.end()) { //check there is next and after next
+				
+				// عشان ميكررش اسامي
+				if (ptr == lst.begin()) saved.push_back(*ptr);
+				if (ptr != lst.begin() && '/' +  * ptr != *prev(ptr , 1 ) ) saved.push_back(*ptr);
 
-				string z = "";
-				if (!last.empty()) z = last.top();
-				if (*ptr != z) {
-					saved.push_back(*ptr); // in case it is not the array case
-					//last = *ptr;           ///<<<<edit 1: comment this line and make last = op_stk.front or make it in a separate stalk if you will change in op_tag stalk 
-				}
-				else {
-					//op_tag.push_back(*ptr);
-					last.pop();
-				}
+
+				//value
 				string two_next = *next(ptr, 2); // check that it doesn't exceed the list
 				if ('/' + s == two_next) {       // one line xml tags
 					saved.push_back(*next(ptr)); // push the value
 					ptr = next(ptr, 2); // increase ptr with 2 ptr  = ptr + 2 to skip the value node 
 					continue;
 				}
+
+				//group brackit
 				if ('/' + s != two_next) {  // group opening tag
 					saved.push_back("{");	//lst.emplace(next(ptr), 1, '{');
 					ptr++;
 					continue;
 				}
 			}
-
 		}
 
-		//in case of closing tag
-		if (s[0] == '/') { // increase ptr++
-			string two_prev = *prev(ptr, 2);
-			if (s != '/' + two_prev) { // group closing tag , not one line
-				saved.push_back("}"); //lst.emplace(next(ptr), 1, '}');
-			}
 
+		//in case of closing tag
+		if (s[0] == '/') { 
+
+			// }
+			string two_prev = *prev(ptr, 2);
+			if (s != '/' + two_prev) saved.push_back("}"); //not one line, so group closing tag 
+			
+
+			// , 
 			if (next(ptr) != lst.end()) //not exceed the length
 			{
-				string next_node = *next(ptr, 1); // check what's after me 
-				//in case of name
-				if (next_node[0] != '/' && next_node[0] != '}' && next_node[0] != ',') // the next is a name // edit 2: it won't be any of them as i wrote them in a new list
-				{
-					saved.push_back(","); //lst.emplace(next(ptr), 1, ','); 
+				string next_node = *next(ptr, 1); // check what's after me
+
+				//in case of name add <<<<< , >>>>>> 
+				if (next_node[0] != '/' && next_node[0] != '}' && next_node[0] != ',') saved.push_back(",");
+
+
+
+				// name as my name 
+				if (*ptr == '/' + next_node) { 
+
+					cls_square_b.push(*ptr); // push for the ] brackit
+
+
+					// for opening brackit [ :
+					auto srch = saved.end();
+					srch--;
+
+					for (; srch != saved.begin();) {
+						if ('/' + *srch != *ptr) {
+							srch--;
+							continue;
+						}
+						saved.emplace(next(srch), 1, '[');
+						break;
+					}
+					if ('/' + *srch == *ptr && srch == saved.begin()) saved.emplace(next(srch), 1, '[');
+				}
+
+				// for closing brackit ] :
+				
+				if ( !cls_square_b.empty() && *ptr == cls_square_b.top() && *ptr != '/' + next_node) {
+
+					saved.push_back("]");
+					cls_square_b.pop(); 
 
 				}
-				//next is a name and as my name
-				if (next_node[0] != '/' && s == '/' + next_node) // s = /id , next = id <<<<array []>>
-				{
-					if (once == false) {
-						last.push(next_node);
-						cl_stk.push_front(s); // added /d to stack to remember it 
-						once = true; //this end tag saved once
-						//temp = saved;
-						auto srch = saved.end();
-						srch--;
-						//			for (; srch != saved.begin();) { //current pose , iterate -- till the required value )
-									 // <<<<<<<<<<>>>>>>>>>>>>>>
-										//string vlu = *srch;
-									//	if (*srch != next_node) //the required one so get its postion{
 
-									//	{
-									//		srch--;
-									//		continue;
-									//	}
-									//	saved.emplace(next(srch), 1, '[');
-									//	break;
-									//}
-
-			//       				op_tag.push_front(next_node);  /////// <<<< possible edit 1 >>>>>> -----> remove : op_tag.push_front(next_node);
-						//			}
-
-					}
-					//when it is the last closing tag on the array
-					if (cl_stk.empty() != true && s == cl_stk.front() && s != '/' + next_node) // /id is (the last one )== to the top of the stack and the next isn't my name
-					{	//pop /id
-						saved.push_back("]"); // close the array
-						cl_stk.pop_front();
-						once = false;
-
-						auto srch = saved.end();
-						srch--;
-						for (; srch != saved.begin();) { //current pose , iterate -- till the required value )
-						 // <<<<<<<<<<>>>>>>>>>>>>>>
-							//string vlu = *srch;
-							if (*srch != next_node) //the required one so get its postion{
-							{
-								srch--;
-								continue;
-							}
-							saved.emplace(next(srch), 1, '[');
-							break;
-						}
-
-
-
-
-					}
+			} // not exceeding the length
+			else { // so we now point at last elemnt in the list, so we need to check if it has ]
+				if (!cls_square_b.empty() && *ptr == cls_square_b.top()) { // مش محتاج اتشيك انه مش شبه اللي بعده لانه اخر واحد اصلا
+					saved.push_back("]");
+					cls_square_b.pop();
 				}
 			}
+		
 			ptr++;
 		}
 	}
@@ -191,23 +163,21 @@ int main() {
 
 
 
-		auto pt = saved.begin();
-		for (pt = saved.begin(); pt != saved.end(); pt++) {
+	auto pt = saved.begin();
+	for (pt = saved.begin(); pt != saved.end(); pt++) {
+		cout << *pt << '\n';
+	}
 
-			cout << *pt << '\n';
 
-		}
 
-		/* or
-		string final = "";
-			auto pt = saved.begin();
-			for (pt = saved.begin(); pt != saved.end(); pt++) {
 
-				final = final + *pt + "\n";
 
-				}
 
-		 */
+
+
+
+
+
 
 
 }
