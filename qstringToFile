@@ -1,0 +1,9 @@
+void qstringToFile(QString s_q) {
+    QString filename = "nodes.txt";
+    QFile file(filename);
+    QFile::remove(filename);
+    if (file.open(QIODevice::ReadWrite)) {
+            QTextStream stream(&file);
+            stream << s_q;
+    }
+}
