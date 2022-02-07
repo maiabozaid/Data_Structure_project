@@ -31,36 +31,13 @@ MainWindow::~MainWindow()
 }
 
 //-------------------
-void minify(string str1, QString* min) {
-    for (int i = 0; i < str1.length(); i++) {
-        if (str1[i] == ' ' || str1[i] == '\n') {
-            str1.erase(i, 1);
-            i--;
-        }
-    }
-    *min = QString::fromStdString(str1);
-}
-//-------------------
-void minify2(string str1, QString* min) {
-    regex ex(">( +|\n)+<");
-    string str2 = regex_replace(str1, ex, "><");
-    QString s = QString::fromStdString(str2);
-    QDebug q(&s);
-    //*min = QString::fromStdString(str2);
-}
-//-------------------
-void minify3(string str1, QString* min) {
-    //QRegularExpression ex(">( \n|\n *| *|\n)+<");
-    //-------------
-    QRegularExpression ex(">( *\n|\n *)+<");
-    QString s = QString::fromStdString(str1);
+void minify(QString s, QString* min) {
+    QRegularExpression ex(">( *\n|\n *| )+<");
     s.replace(QRegularExpression(ex), "><");
-    *min = s;
-}
-
-void minify4(QString s, QString* min) {
-    QRegularExpression ex(">( *\n|\n *)+<");
-    s.replace(QRegularExpression(ex), "><");
+    QRegularExpression ex2(">( *\n|\n *| )+");
+    s.replace(QRegularExpression(ex2), ">");
+    QRegularExpression ex3("( *\n|\n *| )+<");
+    s.replace(QRegularExpression(ex3), "<");
     *min = s;
 }
 //-------------------
@@ -540,7 +517,7 @@ void MainWindow::on_minify_pushButton_clicked()
 //    string input_str = input_str_q.toStdString();
 //    minify3(input_str, &minified);
     QString input_str_q = ui->output_textBrowser->toPlainText();
-    minify4(input_str_q, &minified);
+    minify(input_str_q, &minified);
     ui->output_textBrowser->setText("");
     ui->output_textBrowser->setText(minified);
     QMessageBox::information(0, "Done", "File minified");
@@ -752,4 +729,143 @@ void MainWindow::on_convert_pushButton_clicked()
     QString json_q = QString::fromStdString(final_json);
     qDebug() << json_q << "\n";
     ui->output_textBrowser->setText(json_q);
+}
+
+void countNoOfUsers(string xml_file, int* n) {
+    *n = 0;
+    string prev_opening_tag = "";
+    for (int i = 0; i < xml_file.length(); i++)
+    {
+        string opening_tag_name = "";
+        if (xml_file[i] == '<')
+        {
+            switch (xml_file[i + 1])
+            {
+            case'!':
+                continue;
+                break;
+            case'?':
+                continue;
+                break;
+            case'/':
+            {
+                continue;
+                break;
+            }
+            default:
+            {
+                int k;
+                string id_str = "";
+                for (k = i + 1; xml_file[k] != '>'; k++)
+                {
+                    opening_tag_name = opening_tag_name + xml_file[k];
+                }
+                if (opening_tag_name.compare("id") == 0 && prev_opening_tag.compare("user") == 0) {
+                    (*n)++;
+                }
+                prev_opening_tag = opening_tag_name;
+                break;
+            }
+            }
+            continue;
+        }
+        else
+            continue;
+    }
+}
+
+void usersVector(string xml_file, vector<vector<int>>* ids) {
+    string prev_opening_tag = "";
+    int user_id = 0;
+    for (int i = 0; i < xml_file.length(); i++)
+    {
+        string opening_tag_name = "";
+        if (xml_file[i] == '<')
+        {
+            switch (xml_file[i + 1])
+            {
+            case'!':
+                continue;
+                break;
+            case'?':
+                continue;
+                break;
+            case'/':
+            {
+                continue;
+                break;
+            }
+            default:
+            {
+                int k;
+                int id_int;
+                string id_str = "";
+                for (k = i + 1; xml_file[k] != '>'; k++)
+                {
+                    opening_tag_name = opening_tag_name + xml_file[k];
+                }
+                if (opening_tag_name.compare("id")==0 && prev_opening_tag.compare("user")==0) {
+                    for (int j = k + 1; xml_file[j] != '<'; j++) {
+                        id_str += xml_file[j];
+                    }
+                    id_int = stoi(id_str);
+                    user_id = id_int;
+                    (*ids)[user_id - 1].push_back(id_int);
+                }
+                else if (opening_tag_name.compare("id") == 0 && prev_opening_tag.compare("follower") == 0) {
+                    for (int j = k + 1; xml_file[j] != '<'; j++) {
+                        id_str += xml_file[j];
+                    }
+                    id_int = stoi(id_str);
+                    (*ids)[user_id - 1].push_back(id_int);
+                }
+                prev_opening_tag = opening_tag_name;
+                break;
+            }
+            }
+            continue;
+        }
+
+        else
+            continue;
+    }
+}
+
+QString vectorToQString(vector<vector<int>> v) {
+    string s_str = "";
+    for (int i = 0; i<v.size(); i++) {
+        for (int j = 1; j<v[i].size(); j++) {
+            s_str += to_string(v[i][0]);
+            s_str += ' ';
+            s_str += to_string(v[i][j]);
+            s_str += '\n';
+        }
+    }
+    QString s_q = QString::fromStdString(s_str);
+    return s_q;
+}
+
+void qstringToFile(QString s_q) {
+    QString filename = "nodes.txt";
+    QFile file(filename);
+    QFile::remove(filename);
+    if (file.open(QIODevice::ReadWrite)) {
+            QTextStream stream(&file);
+            stream << s_q;
+    }
+}
+
+void MainWindow::on_graph_pushButton_clicked()
+{
+    string xml_out = ui->output_textBrowser->toPlainText().toStdString();
+    int n;
+    countNoOfUsers(xml_out, &n);
+    vector<vector<int>> ids(n);
+    usersVector(xml_out, &ids);
+    QString output_qstr = vectorToQString(ids);
+    qstringToFile(output_qstr);
+    // RUNNING PYTHON SCRIPT TO VISUALIZE THE GRAPH
+    QString cpath = QDir::currentPath();
+    QDir::setCurrent(cpath);
+    system("python pythonScript1.py");
 }
