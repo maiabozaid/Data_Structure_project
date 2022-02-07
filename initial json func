@@ -11,8 +11,7 @@ int main() {
 	list <string> lst;
 	list <string> saved;
 
-	string xml_file = " <user> <id> 4 </id> <id> 3 </id> </user> <user> <id> 5 </id> </user> ";
-
+	string xml_file = " <users>			<user> <id>1</id>  <name> Ahmed Ali </name>    <posts>      <post>        <body>       bla bla bla        </body>        <topics>        <topic>        economy        </topic>        <topic>        finance        </topic>        </topics>        </post>        <post>        <body>    bla       </body>        <topics>        <topic>        solar_energy        </topic>        </topics>        </post>        </posts>        <followers>        <follower>        <id>2</id>        </follower>        <follower>        <id>3</id>        </follower>        </followers>        </user>        <user>        <id>2</id>        <name>Yasser Ahmed</name>        <posts>        <post>        <body>        Lorem      </body>        <topics>        <topic>        education        </topic>        </topics>        </post>        </posts>        <followers>        <follower>        <id>1 </id>        </follower>        </followers>        </user>        <user>        <id>3 </id>        <name>Mohamed Sherif</name>        <posts>        <post>        <body>        Lorem     </body>        <topics>        <topic>        sports        </topic>        </topics>        </post>        </posts>        <followers>        <follower>        <id>1</id>        </follower>        </followers>        </user>        </users>" ;
 
 	for (int i = 0; i < xml_file.length(); i++)
 	{
@@ -65,18 +64,18 @@ int main() {
 
 
 	auto ptr = lst.begin(); // head of the lst
-
+	stack <string> cls_square_b ;
 
 	// we turn from lst to saved
 	for (; ptr != lst.end();) {
 		string s = *ptr;  // data of the node
 
 		//in case of opening tag ,, and here there is 2 cases add value or add group brackit
-		if (s[0] != '/' && s[0] != '  ' && s[0] != '{' && s[0] != '}' && s[0] != ',' && s[0] != '[' && s[0] != ']') { // i added not = ] or [
+		if (s[0] != '/' && s[0] != '  ' && s[0] != '{' && s[0] != '}' && s[0] != ',' && s[0] != '[' && s[0] != ']') { 
 
 			if (next(ptr, 1) != lst.end() && next(ptr, 2) != lst.end()) { //check there is next and after next
 				
-				// عشان ميكررش اسامي
+				// to avoid repeaating names
 				if (ptr == lst.begin()) saved.push_back(*ptr);
 				if (ptr != lst.begin() && '/' +  * ptr != *prev(ptr , 1 ) ) saved.push_back(*ptr);
 
@@ -117,52 +116,89 @@ int main() {
 
 
 
-
-				
 				// name as my name 
 				if (*ptr == '/' + next_node) { 
+
+					cls_square_b.push(*ptr); // push for the ] brackit
+
+
+					// for opening brackit [ :
 					auto srch = saved.end();
 					srch--;
 
-					
 					for (; srch != saved.begin();) {
 						if ('/' + *srch != *ptr) {
 							srch--;
 							continue;
 						}
+						if(* next(srch,1) != "[" ) {
 						saved.emplace(next(srch), 1, '[');
+						}
+						
 						break;
 					}
 					if ('/' + *srch == *ptr && srch == saved.begin()) saved.emplace(next(srch), 1, '[');
 				}
 
+				// for closing brackit ] :
+				
+				if ( !cls_square_b.empty() && *ptr == cls_square_b.top() && *ptr != '/' + next_node) {
 
+					saved.push_back("]");
+					cls_square_b.pop(); 
 
+				}
 
+			} // not exceeding the length
+			else { // so we now point at last elemnt in the list, so we need to check if it has ]
+				if (!cls_square_b.empty() && *ptr == cls_square_b.top()) { //we won't check if it doesn't equal its next because it has no next, it's the last one
+					saved.push_back("]");
+					cls_square_b.pop();
+				}
 			}
-			
+		
 			ptr++;
 		}
 	}
 
 
 
-
-
+// for printing in a json format
+	cout << '{' << '\n' << "  ";
+	string last_space = "  "; 
 	auto pt = saved.begin();
 	for (pt = saved.begin(); pt != saved.end(); pt++) {
-		cout << *pt << '\n';
+		//name or value
+		if (*pt != "{" && *pt != "}" && *pt != "[" && *pt != "]" && *pt != ",") {
+			
+			if ( pt == saved.begin()) cout << "\"" << *pt << "\"" << ":"  << " " ; //tag name 
+			else if (*next(pt , 1 ) != "]" && * next(pt, 1) != "}" && *next(pt, 1) != ","  ) cout << "\"" << *pt << "\"" << ":" << " "; //tag name
+			else {
+				try { // number					
+				cout <<  stoi(*pt) ;  // value 
+				}
+				catch (invalid_argument e) {
+				cout << "\"" << *pt << "\"";  // value 
+				}
+			}
+
+		}
+		if (*pt == "{" ||  *pt == "[" ) {
+			last_space += "  ";
+			cout << *pt << '\n' << last_space ; 
+		}
+
+		if (*pt == ",") {
+			cout << *pt << '\n' << last_space;
+		}
+
+		if (*pt == "}" || *pt == "]") {
+			last_space.erase( last_space.length() - 2 ) ;
+			cout << '\n' << last_space << *pt ;
+		}
+
 	}
-
-
-
-
-
-
-
-
-
-
+	cout << '\n' << '}' ;
 
 
 
