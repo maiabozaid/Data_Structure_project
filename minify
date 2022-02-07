@@ -1,0 +1,9 @@
+void minify(QString s, QString* min) {
+    QRegularExpression ex(">( *\n|\n *| )+<");
+    s.replace(QRegularExpression(ex), "><");
+    QRegularExpression ex2(">( *\n|\n *| )+");
+    s.replace(QRegularExpression(ex2), ">");
+    QRegularExpression ex3("( *\n|\n *| )+<");
+    s.replace(QRegularExpression(ex3), "<");
+    *min = s;
+}
