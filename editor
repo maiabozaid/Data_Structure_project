@@ -132,7 +132,10 @@ int main() {
 							srch--;
 							continue;
 						}
+						if(* next(srch,1) != "[" ) {
 						saved.emplace(next(srch), 1, '[');
+						}
+						
 						break;
 					}
 					if ('/' + *srch == *ptr && srch == saved.begin()) saved.emplace(next(srch), 1, '[');
