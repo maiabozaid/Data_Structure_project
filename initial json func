@@ -40,8 +40,8 @@ int main() {
 				int k;
 				for (k = i + 1; xml_file[k] != '<' && k < xml_file.length(); k++) //loop till the opening tag
 				{  //not value
-					if (xml_file[k] == ' ' && xml_file[k - 1] == ' ' || xml_file[k] == ' ' && xml_file[k - 1] == '>' || xml_file[k] == '<' && xml_file[k - 1] == ' ' || xml_file[k] == '\n' || xml_file[k] == '\t') continue;
-					else value = value + xml_file[k]; // a value
+				if (xml_file[k] == ' ' && xml_file[k - 1] == ' ' || xml_file[k] == ' ' && xml_file[k - 1] == '>' || xml_file[k] == '<' && xml_file[k - 1] == ' ' || xml_file[k] == '\n' || xml_file[k] == '\t' || xml_file[k] == ' ' && xml_file[k - 1] == '\n' || xml_file[k] == ' ' && xml_file[k - 1] == '\t') continue;
+				else value = value + xml_file[k]; // a value
 				}
 				if (value != "") lst.push_back(value);
 
