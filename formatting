@@ -1,291 +1,129 @@
-
-
-void check_formatting(string s0)
-{
-int i = 0;
-    vector<string> line_data(s0.length());
-
-    int* op_cl = new int;      //first digit represents opening tag & second closing tag 
-    int x[2] = { 0b10 , 0b01 };
-    int found = 0;
-
-    while (found != -1) {
-        found = s0.find("\n");
-        for (int f = 0; f < found;) {
-            line_data[i] += s0[f];
-            f++;
-        }
-        s0.erase(0, found + 1);
-        i++;
-    }
-  
-    for (int k = 0; k < i; k++)
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <cstring>
+using namespace std;
+void format(string xml_file) {
+    int indent = 0;
+    string out_str = "";
+    queue<string> q;
+    bool prev_tag_open = false;  // false = closing tag, true = opening tag
+    for (int i = 0; i < xml_file.length(); i++)
     {
-
-        *(op_cl + k) = 0b00;
-
-
-        for (int j = 0; j < (line_data[k].length()); ) // loop on rows
+        string opening_tag = "";
+        string closing_tag = "";
+        string data = "";
+        if (xml_file[i] == '<')
         {
-            switch ((line_data[k])[j])
+            switch (xml_file[i + 1])
             {
-            case ' ':
-            {
-                j++;
-                continue;
+            case'!':
+                int j;
+                for (j = i; xml_file[j] != '>'; j++)
+                {
+                    closing_tag = closing_tag + xml_file[j];
+                }
+                closing_tag += '>';
+                q.push(closing_tag);
+                q.push("\n");
+                i = j;
                 break;
-            }
-            case '<':
+            case'?':
+                for (j = i; xml_file[j] != '>'; j++)
+                {
+                    closing_tag = closing_tag + xml_file[j];
+                }
+                closing_tag += '>';
+                q.push(closing_tag);
+                q.push("\n");
+                i = j;
+                break;
+            case'/':
             {
-                if ((line_data[k])[j + 1] == '?' || (line_data[k])[j + 1] == '!')
+                for (j = i; xml_file[j] != '>'; j++)
                 {
-                    while ((line_data[k])[j] != '>')
-                    {
-                        j++;
-                    }
-                    j++;
-
-                    continue;
-                    break;
+                    closing_tag = closing_tag + xml_file[j];
                 }
-                else if ((line_data[k])[j + 1] == '/')
-                {
-
-                    *(op_cl + k) |= x[1];
-                    while ((line_data[k])[j] != '>')
-                    {
-                        j++;
+                closing_tag += '>';
+                if (prev_tag_open) {
+                    q.push("\n");
+                    for (int m = 0; m < indent; m++) {
+                        q.push("    ");
                     }
-                    j++;
-
-                    continue;
-                    break;
-
                 }
-                else
-                {
-                    *(op_cl + k) |= x[0];
-                    while ((line_data[k])[j] != '>')
-                    {
-                        j++;
+                else {
+                    q.push("\n");
+                    indent--;
+                    for (int m = 0; m < indent; m++) {
+                        q.push("    ");
                     }
-                    j++;
-
-                    continue;
-                    break;
-
                 }
+                q.push(closing_tag);
+                prev_tag_open = false;
+                i = j;
+                break;
             }
             default:
             {
-                j++;
+                int k;
+                for (k = i; xml_file[k] != '>'; k++)
+                {
+                    opening_tag = opening_tag + xml_file[k];
+                }
+                opening_tag += '>';
+                if (prev_tag_open) {
+                    q.push("\n");
+                    indent++;
+                    for (int m = 0; m < indent; m++) {
+                        q.push("    ");
+                    }
+                }
+                else {
+                    if (indent != 0)
+                        q.push("\n");
+                    for (int m = 0; m < indent; m++) {
+                        q.push("    ");
+                    }
+                }
+                q.push(opening_tag);
+                
+                int d;
+                for (d = k + 1; xml_file[d] != '<'; d++)
+                {
+                    data = data + xml_file[d];
+                }
+                
+                bool allwhitespace = true;
+                for (int b = 0; b < data.length(); b++) {
+                    if (!isspace(data[b])) {
+                        allwhitespace = false;
+                        break;
+                    }
+                }
+                if (!allwhitespace) {
+                    q.push("\n");
+                    for (int m = 0; m < indent; m++) {
+                        q.push("    ");
+                    }
+                    q.push(data);
+                }
 
-                continue;
+                prev_tag_open = true;
+                i = d - 1;
                 break;
-
             }
             }
+            continue;
         }
-     
+        else
+            continue;
     }
-    /*for (int r = 0; r < i; r++)
-    {
-        cout << line_data[r] << endl;
-    }*/
-
-    int temp = 1;
-    cout << line_data[0] << endl;
-    for (int m = 0; m < i - 1; m++)
-    {
-        string s = "";
-      
-        switch (op_cl[m])  //loop on lines
-        {
-        case 2:                //opening only
-        {
-            if (op_cl[m + 1] == 2)       //op + op
-            {
-                // one added tap
-                for (int j = 0; j < temp; j++)
-                {
-                    s += "    ";
-                }
-                line_data[m + 1] = s + line_data[m + 1];
-                temp++; //2 
-             ;
-
-            }
-
-            else if (op_cl[m + 1] == 3)       //op + op&cl
-            {
-                // one added tap
-                for (int j = 0; j < temp; j++)
-                {
-                    s += "    ";
-                }
-                line_data[m + 1] = s + line_data[m + 1];
-                
-
-
-            }
-
-            else if (op_cl[m + 1] == 0 || op_cl[m + 1] == 1)  // op +text || op + cl
-            {
-                //no added taps
-                for (int j = 0; j < temp; j++)
-                {
-                    s += "    ";
-                }
-                line_data[m + 1] = s + line_data[m + 1];
-               
-            }
-            cout << line_data[m + 1] << endl;
-            continue;
-            break;
+    int size = q.size();
+    for (int i = 0; i < size; i++) {
+        if (!q.empty()) {
+            out_str += q.front();
+            q.pop();
         }
-        case 3:               // opening & closing at the same line
-        {
-            if (op_cl[m + 1] == 2)     // (op&cl) + op
-            {
-                //no added taps
-                for (int j = 0; j < temp; j++)
-                {
-                    s += "    ";
-                }
-                line_data[m + 1] = s + line_data[m + 1];
-                temp++;
-               
-
-            }
-
-            else if (op_cl[m + 1] == 3)     // (op&cl) + (op&cl)
-            {
-                //no added taps
-                for (int j = 0; j < temp; j++)
-                {
-                    s += "    ";
-                }
-                line_data[m + 1] = s + line_data[m + 1];
-                
-
-            }
-
-            else if (op_cl[m + 1] == 1)                     //(op&cl) + cl
-            {
-                //erase1 tap
-                temp--;
-                for (int j = 0; j < temp; j++)
-                {
-                    s += "    ";
-                }
-                line_data[m + 1] = s + line_data[m + 1];
-               
-
-
-            }
-            cout << line_data[m + 1] << endl;
-            continue;
-            break;
-        }
-        case 1:             // closing only
-        {
-            if (op_cl[m + 1] == 2)      // cl + op
-            {
-                // no added taps
-                for (int j = 0; j < temp; j++)
-                {
-                    s += "    ";
-                }
-                line_data[m + 1] = s + line_data[m + 1];
-                temp++;
-              
-
-            }
-
-            else if (op_cl[m + 1] == 3)      // cl + (op&cl)
-            {
-                // no added taps
-                for (int j = 0; j < temp; j++)
-                {
-                    s += "    ";
-                }
-                line_data[m + 1] = s + line_data[m + 1];
-              
-
-            }
-
-            else if (op_cl[m + 1] == 1)  //cl + cl
-            {
-                //erase1 tap
-                temp--;
-                for (int j = 0; j < temp; j++)
-                {
-                    s += "    ";
-                }
-                line_data[m + 1] = s + line_data[m + 1];
-                
-            }
-            cout << line_data[m + 1] << endl;
-
-            continue;
-            break;
-        }
-        default:
-        {
-            if (op_cl[m + 1] == 1)  //text + cl
-            {
-                //erase1 tap
-                temp--;
-                for (int j = 0; j < temp; j++)
-                {
-                    s += "    ";
-                }
-                line_data[m + 1] = s + line_data[m + 1];
-                
-
-            }
-
-            else if (op_cl[m + 1] == 0)      // text + text
-            {
-                if (op_cl[m - 1] == 0)   // if the line before it is also text
-                {
-                    for (int j = 0; j < temp; j++)
-                    {
-                        s += "    ";
-                    }
-                    line_data[m + 1] = s + line_data[m + 1];
-                   
-
-
-                }
-                else if (op_cl[m - 1] != 0)
-                {
-                    for (int j = 0; j < temp; j++)
-                    {
-                        s += "    ";
-                    }
-                    line_data[m + 1] = s + line_data[m + 1];
-                    temp++;
-                   
-
-
-                }
-
-            }
-            cout << line_data[m + 1] << endl;
-
-            continue;
-            break;
-        }
-
-        }
-
     }
-
-    /*for (int r = 0; r < i; r++)
-    {
-        cout << line_data[r] << endl;
-    }*/
-
-
+    cout << out_str;
 }
