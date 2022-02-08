@@ -17,6 +17,8 @@
 #include<fstream>
 #include<algorithm>
 #include <list>
+#include <queue>
+#include <cstring>
 using namespace std;
 
 MainWindow::MainWindow(QWidget *parent)
@@ -40,123 +42,7 @@ void minify(QString s, QString* min) {
     s.replace(QRegularExpression(ex3), "<");
     *min = s;
 }
-//-------------------
-void check_consistency(string xml_file, string* new_xml_file)
-{
-    stack<string> s;
-    *new_xml_file = xml_file;
-    for (int i = 0; i < (*new_xml_file).length(); i++)
-    {
-        string opening_tag_name = "";
-        string closing_tag_name = "";
-        if ((*new_xml_file)[i] == '<')
-        {
-            switch ((*new_xml_file)[i + 1])
-            {
-            case'!':
-                continue;
-                break;
-            case'?':
-                continue;
-                break;
-            case'/':
-            {
-                for (int j = i + 2; (*new_xml_file)[j] != '>'; j++)
-                {
-                    closing_tag_name = closing_tag_name + (*new_xml_file)[j];
-                }
-                if (s.top() == closing_tag_name)
-                {
-                    s.pop();
-                }
-                else if (s.top() != closing_tag_name)
-                {
-                    string er_str = "the closing tag " + closing_tag_name + " Not Matching the opening tag " + s.top() + "\n";
-                    QString er = QString::fromStdString(er_str);
-                    QMessageBox::information(0, "ERROR!", er);
-                    string er_str2 = "SOLVING ERRORS\n";
-                    QString er2 = QString::fromStdString(er_str2);
-                    QMessageBox::information(0, "ERROR!", er2);
 
-
-                    /*Assume that if the error is that the closing tag not matching the opening tag,
-                    then the closing tag doesn't exist in the file */
-
-                    while (s.top() != closing_tag_name)
-                    {
-                        string closetag = "";
-                        string right_closing_tag = "";
-                        closetag = "</" + closing_tag_name + ">";
-                        right_closing_tag = "</" + s.top() + ">";
-
-                        string data = "";
-                        string opentag_of_right_closing_tag = "<" + s.top() + ">";
-                        for (int i = (*new_xml_file).find(opentag_of_right_closing_tag) + opentag_of_right_closing_tag.length(); (*new_xml_file)[i] != '<'; i++)
-                        {
-                            data = data + (*new_xml_file)[i];
-                        }
-
-                        if (data == "")
-                        {
-                            (*new_xml_file).insert((*new_xml_file).find(closetag) - 1, right_closing_tag);
-                            s.pop();
-                        }
-                        else
-                        {
-                            (*new_xml_file).insert((*new_xml_file).find(data) + data.length(), right_closing_tag);
-                            s.pop();
-                        }
-                    }
-                    break;
-                }
-                break;
-            }
-            default:
-            {
-                for (int k = i + 1; (*new_xml_file)[k] != '>'; k++)
-                {
-                    opening_tag_name = opening_tag_name + (*new_xml_file)[k];
-                }
-                s.push(opening_tag_name);
-                break;
-            }
-            }
-            continue;
-        }
-
-        else
-            continue;
-    }
-    if (s.empty())
-    {
-        string str = "The XML File is consistent";
-        QString qstr = QString::fromStdString(str);
-        QMessageBox::information(0, "Successful!", qstr);
-        return;
-    }
-    else
-    {
-        string str = "ERROR! opening tag " + s.top() + " without closing tag \n";
-        QString qstr = QString::fromStdString(str);
-        QMessageBox::information(0, "ERROR!", qstr);
-        string str2 = "SOLVING ERRORS";
-        QString qstr2 = QString::fromStdString(str2);
-        QMessageBox::information(0, "ERROR!", qstr2);
-        while (!s.empty())
-        {
-            string missing_close_tag = "";
-            missing_close_tag = "</" + s.top() + ">";
-            (*new_xml_file) = (*new_xml_file) + missing_close_tag;
-            cout << "stack top = " << s.top() << endl;
-            s.pop();
-            cout << "stack popped" <<endl;
-            cout << s.empty() << endl;
-        }
-        check_consistency(xml_file, new_xml_file);
-    }
-
-}
-//-------------------
 vector<int> encoding(string s)
 {
     unordered_map<string, int> table;
@@ -494,11 +380,267 @@ void MainWindow::on_openFile_pushButton_clicked()
     ui->output_textBrowser->setText(ui->input_textBrowser->toPlainText());
 }
 
+//-------------------
+void check_consistency(string xml_file, string* new_xml_file)
+{
+    stack<string> s;
+    *new_xml_file = xml_file;
+    for (int i = 0; i < (*new_xml_file).length(); i++)
+    {
+        string opening_tag_name = "";
+        string closing_tag_name = "";
+        if ((*new_xml_file)[i] == '<')
+        {
+            switch ((*new_xml_file)[i + 1])
+            {
+            case'!':
+                continue;
+                break;
+            case'?':
+                continue;
+                break;
+            case'/':
+            {
+                for (int j = i + 2; (*new_xml_file)[j] != '>'; j++)
+                {
+                    closing_tag_name = closing_tag_name + (*new_xml_file)[j];
+                }
+                if (s.top() == closing_tag_name)
+                {
+                    s.pop();
+                }
+                else if (s.top() != closing_tag_name)
+                {
+                    string er_str = "the closing tag " + closing_tag_name + " Not Matching the opening tag " + s.top() + "\n";
+                    QString er = QString::fromStdString(er_str);
+                    QMessageBox::information(0, "ERROR!", er);
+                    string er_str2 = "SOLVING ERRORS\n";
+                    QString er2 = QString::fromStdString(er_str2);
+                    QMessageBox::information(0, "ERROR!", er2);
+
+
+                    /*Assume that if the error is that the closing tag not matching the opening tag,
+                    then the closing tag doesn't exist in the file */
+
+                    while (s.top() != closing_tag_name)
+                    {
+                        string closetag = "";
+                        string right_closing_tag = "";
+                        closetag = "</" + closing_tag_name + ">";
+                        right_closing_tag = "</" + s.top() + ">";
+
+                        string data = "";
+                        string opentag_of_right_closing_tag = "<" + s.top() + ">";
+                        for (int i = (*new_xml_file).find(opentag_of_right_closing_tag) + opentag_of_right_closing_tag.length(); (*new_xml_file)[i] != '<'; i++)
+                        {
+                            data = data + (*new_xml_file)[i];
+                        }
+
+                        if (data == "")
+                        {
+                            (*new_xml_file).insert((*new_xml_file).find(closetag) - 1, right_closing_tag);
+                            s.pop();
+                        }
+                        else
+                        {
+                            (*new_xml_file).insert((*new_xml_file).find(data) + data.length(), right_closing_tag);
+                            s.pop();
+                        }
+                    }
+                    break;
+                }
+                break;
+            }
+            default:
+            {
+                for (int k = i + 1; (*new_xml_file)[k] != '>'; k++)
+                {
+                    opening_tag_name = opening_tag_name + (*new_xml_file)[k];
+                }
+                s.push(opening_tag_name);
+                break;
+            }
+            }
+            continue;
+        }
+
+        else
+            continue;
+    }
+    if (s.empty())
+    {
+        string str = "The XML File is consistent";
+        QString qstr = QString::fromStdString(str);
+        QMessageBox::information(0, "Successful!", qstr);
+        return;
+    }
+    else
+    {
+        string str = "ERROR! opening tag " + s.top() + " without closing tag \n";
+        QString qstr = QString::fromStdString(str);
+        QMessageBox::information(0, "ERROR!", qstr);
+        string str2 = "SOLVING ERRORS";
+        QString qstr2 = QString::fromStdString(str2);
+        QMessageBox::information(0, "ERROR!", qstr2);
+        while (!s.empty())
+        {
+            string missing_close_tag = "";
+            missing_close_tag = "</" + s.top() + ">";
+            (*new_xml_file) = (*new_xml_file) + missing_close_tag;
+            cout << "stack top = " << s.top() << endl;
+            s.pop();
+            cout << "stack popped" <<endl;
+            cout << s.empty() << endl;
+        }
+        check_consistency(xml_file, new_xml_file);
+    }
+
+}
+//--------CONSISTENCY2----------------
+bool check_consistency2(string xml_file, string* new_xml_file)
+{
+    stack <string> s;
+    *new_xml_file = xml_file;
+    //checking xml file charachter by charachter
+    for (int i = 0; i < (*new_xml_file).length(); i++)
+    {
+        string opening_tag_name = "";
+        string closing_tag_name = "";
+        if ((*new_xml_file)[i] == '<')
+        {
+            switch ((*new_xml_file)[i + 1])
+            {
+            case'!':
+                continue;
+                break;
+            case'?':
+                continue;
+                break;
+            case'/':
+            {
+                //extracting closing tag name
+                for (int j = i + 2; (*new_xml_file)[j] != '>'; j++)
+                {
+                    closing_tag_name = closing_tag_name + (*new_xml_file)[j];
+                }
+
+                if (!s.empty() && s.top() == closing_tag_name)
+                {
+                    s.pop();
+                }
+                else if (!s.empty() && s.top() != closing_tag_name)
+                {
+//                    cout << "ERROR! the closing tag " << closing_tag_name << " Not Matching the opening tag " << s.top() << endl;
+//                    cout << "SOLVING ERRORS" << endl;
+                    string er_str = "the closing tag " + closing_tag_name + " Not Matching the opening tag " + s.top() + "\n";
+                    QString er = QString::fromStdString(er_str);
+                    QMessageBox::information(0, "ERROR!", er);
+                    string er_str2 = "SOLVING ERRORS\n";
+                    QString er2 = QString::fromStdString(er_str2);
+                    QMessageBox::information(0, "ERROR!", er2);
+                    //handling ERROR
+                    /*Assume that if the error is that the closing tag not matching the opening tag,
+                    then the closing tag doesn't exist in the file */
+
+                    while (s.top() != closing_tag_name)
+                    {
+                        string closetag = "";
+                        string right_closing_tag = "";
+                        closetag = "</" + closing_tag_name + ">";
+                        right_closing_tag = "</" + s.top() + ">";
+
+                        string data = "";
+                        string opentag_of_right_closing_tag = "<" + s.top() + ">";
+                        for (int i = (*new_xml_file).find(opentag_of_right_closing_tag) + opentag_of_right_closing_tag.length(); (*new_xml_file)[i] != '<'; i++)
+                        {
+                            data = data + (*new_xml_file)[i];
+                        }
+
+                        if (data == "")
+                        {
+                            (*new_xml_file).insert((*new_xml_file).find(closetag) - 1, right_closing_tag);
+                            s.pop();
+                        }
+                        else
+                        {
+                            (*new_xml_file).insert((*new_xml_file).find(data) + data.length(), right_closing_tag);
+                            s.pop();
+                        }
+                    }
+                    break;
+                }
+                ///////////////////////////////////////////////////////////////
+                else if (s.empty())
+                {
+//                    cout << "ERROR! the closing tag " << closing_tag_name << " without opening tag" << endl;
+//                    cout << "SOLVING ERRORS" << endl;
+                    string er_str = "the closing tag " + closing_tag_name + " Not Matching the opening tag " + s.top() + "\n";
+                    QString er = QString::fromStdString(er_str);
+                    QMessageBox::information(0, "ERROR!", er);
+                    string er_str2 = "SOLVING ERRORS\n";
+                    QString er2 = QString::fromStdString(er_str2);
+                    QMessageBox::information(0, "ERROR!", er2);
+                    (*new_xml_file).erase((*new_xml_file).find(closing_tag_name) - 2, closing_tag_name.length() + 3);
+                }
+                //////////////////////////////////////////////////////////////
+                break;
+            }
+            default:
+            {
+                //extracting opening tag name
+                for (int k = i + 1; (*new_xml_file)[k] != '>'; k++)
+                {
+                    opening_tag_name = opening_tag_name + (*new_xml_file)[k];
+                }
+                s.push(opening_tag_name);
+                break;
+            }
+            }
+            continue;
+        }
+
+        else
+            continue;
+    }
+
+    if (s.empty())
+    {
+//        cout << "The XML File is consistent" << endl;
+//        cout << (*new_xml_file) << endl;
+        string str = "The XML File is consistent";
+        QString qstr = QString::fromStdString(str);
+        QMessageBox::information(0, "Successful!", qstr);
+        return true;
+    }
+    else
+    {
+//        cout << "ERROR! opening tag " << s.top() << " without closing tag " << endl;
+//        cout << "SOLVING ERRORS" << endl;
+        string str = "ERROR! opening tag " + s.top() + " without closing tag \n";
+        QString qstr = QString::fromStdString(str);
+        QMessageBox::information(0, "ERROR!", qstr);
+        string str2 = "SOLVING ERRORS";
+        QString qstr2 = QString::fromStdString(str2);
+        QMessageBox::information(0, "ERROR!", qstr2);
+        //handling ERROR
+        while (!s.empty())
+        {
+            string missing_close_tag = "";
+            missing_close_tag = "</" + s.top() + ">";
+            (*new_xml_file) = (*new_xml_file) + missing_close_tag;
+            s.pop();
+        }
+        check_consistency2(xml_file, new_xml_file);
+    }
+}
+
+//------------------------------------
+
 void MainWindow::on_checkConsistency_pushButton_clicked()
 {
     string xml_file = (ui->output_textBrowser->toPlainText()).toStdString();
     string new_xml_file = "";
-    check_consistency(xml_file, &new_xml_file);
+    check_consistency2(xml_file, &new_xml_file);
     QString new_xml_q = QString::fromStdString(new_xml_file);
     ui->output_textBrowser->setText("");
     ui->output_textBrowser->setText(new_xml_q);
@@ -523,14 +665,284 @@ void MainWindow::on_minify_pushButton_clicked()
     QMessageBox::information(0, "Done", "File minified");
 }
 
+//-----------------FORMATTING1---------------------
+void format(string xml_file, QString* frmtd) {
+    int indent = 0;
+        string out_str = "";
+        queue<string> q;
+        bool prev_tag_open = false;  // false = closing tag, true = opening tag
+        for (int i = 0; i < xml_file.length(); i++)
+        {
+            string opening_tag = "";
+            string closing_tag = "";
+            string data = "";
+            if (xml_file[i] == '<')
+            {
+                switch (xml_file[i + 1])
+                {
+                case'!':
+                    int j;
+                    for (j = i; xml_file[j] != '>'; j++)
+                    {
+                        closing_tag = closing_tag + xml_file[j];
+                    }
+                    closing_tag += '>';
+                    q.push(closing_tag);
+                    q.push("\n");
+                    i = j;
+                    break;
+                case'?':
+                    //int j;
+                    for (j = i; xml_file[j] != '>'; j++)
+                    {
+                        closing_tag = closing_tag + xml_file[j];
+                    }
+                    closing_tag += '>';
+                    q.push(closing_tag);
+                    q.push("\n");
+                    i = j;
+                    break;
+                case'/':
+                {
+                    //int j;
+                    for (j = i; xml_file[j] != '>'; j++)
+                    {
+                        closing_tag = closing_tag + xml_file[j];
+                    }
+                    closing_tag += '>';
+                    //cout << "CLOSING TAG = " << closing_tag << endl;
+                    if (prev_tag_open) {
+                        q.push("\n");
+                        for (int m = 0; m < indent; m++) {
+                            q.push("    ");
+                        }
+                    }
+                    else {
+                        q.push("\n");
+                        indent--;
+                        for (int m = 0; m < indent; m++) {
+                            q.push("    ");
+                        }
+                    }
+                    q.push(closing_tag);
+                    prev_tag_open = false;
+                    i = j;
+                    //--------------------
+                    break;
+                }
+                default:
+                {
+                    int k;
+                    for (k = i; xml_file[k] != '>'; k++)
+                    {
+                        opening_tag = opening_tag + xml_file[k];
+                    }
+                    opening_tag += '>';
+                    if (prev_tag_open) {
+                        q.push("\n");
+                        indent++;
+                        for (int m = 0; m < indent; m++) {
+                            q.push("    ");
+                        }
+                    }
+                    else {
+                        q.push("\n");
+                        for (int m = 0; m < indent; m++) {
+                            q.push("    ");
+                        }
+                    }
+                    q.push(opening_tag);
+                    //------
+                    q.push("\n");
+                    //------
+                    int d;
+                    for (d = k + 1; xml_file[d] != '<'; d++)
+                    {
+                        data = data + xml_file[d];
+                    }
+                    //cout << "data = " << data << endl;
+                    //--------
+                    for (int m = 0; m < indent; m++) {
+                        q.push("    ");
+                    }
+                    //--------
+                    q.push(data);
+                    //cout << "queue back = " << q.back() << endl;
+                    prev_tag_open = true;
+                    i = d - 1;
+                    break;
+                }
+                }
+                continue;
+            }
+            else
+                continue;
+        }
+        int size = q.size();
+        //cout << "queue size = " << size << endl;
+        for (int i = 0; i < size; i++) {
+            if (!q.empty()) {
+                out_str += q.front();
+                q.pop();
+            }
+        }
+    //cout << out_str;
+    *frmtd = QString::fromStdString(out_str);
+}
+//-----------------FORMATTING2-------------------
+void format2(string xml_file, QString* frmtd) {
+    int indent = 0;
+    string out_str = "";
+    queue<string> q;
+    bool prev_tag_open = false;  // false = closing tag, true = opening tag
+    for (int i = 0; i < xml_file.length(); i++)
+    {
+        string opening_tag = "";
+        string closing_tag = "";
+        string data = "";
+        if (xml_file[i] == '<')
+        {
+            switch (xml_file[i + 1])
+            {
+            case'!':
+                int j;
+                for (j = i; xml_file[j] != '>'; j++)
+                {
+                    closing_tag = closing_tag + xml_file[j];
+                }
+                closing_tag += '>';
+                q.push(closing_tag);
+                q.push("\n");
+                i = j;
+                break;
+            case'?':
+                //int j;
+                for (j = i; xml_file[j] != '>'; j++)
+                {
+                    closing_tag = closing_tag + xml_file[j];
+                }
+                closing_tag += '>';
+                q.push(closing_tag);
+                q.push("\n");
+                i = j;
+                break;
+            case'/':
+            {
+                //int j;
+                for (j = i; xml_file[j] != '>'; j++)
+                {
+                    closing_tag = closing_tag + xml_file[j];
+                }
+                closing_tag += '>';
+                //cout << "CLOSING TAG = " << closing_tag << endl;
+                if (prev_tag_open) {
+                    q.push("\n");
+                    for (int m = 0; m < indent; m++) {
+                        q.push("    ");
+                    }
+                }
+                else {
+                    q.push("\n");
+                    indent--;
+                    for (int m = 0; m < indent; m++) {
+                        q.push("    ");
+                    }
+                }
+                q.push(closing_tag);
+                prev_tag_open = false;
+                i = j;
+                //--------------------
+                break;
+            }
+            default:
+            {
+                int k;
+                for (k = i; xml_file[k] != '>'; k++)
+                {
+                    opening_tag = opening_tag + xml_file[k];
+                }
+                opening_tag += '>';
+                if (prev_tag_open) {
+                    q.push("\n");
+                    indent++;
+                    for (int m = 0; m < indent; m++) {
+                        q.push("    ");
+                    }
+                }
+                else {
+                    if (indent != 0)
+                        q.push("\n");
+                    for (int m = 0; m < indent; m++) {
+                        q.push("    ");
+                    }
+                }
+                q.push(opening_tag);
+                //------
+                //q.push("\n");
+                //------
+                int d;
+                for (d = k + 1; xml_file[d] != '<'; d++)
+                {
+                    data = data + xml_file[d];
+                }
+                //cout << "data = " << data << endl;
+                //--------------------------------------------
+                /*regex ex("( *\n*|\n* *)");
+                data = regex_replace(data, ex, "");*/
+                //--------------------------------------------
+                //if (data )
+                bool allwhitespace = true;
+                for (int b = 0; b < data.length(); b++) {
+                    if (!isspace(data[b])) {
+                        allwhitespace = false;
+                        break;
+                    }
+                }
+                if (!allwhitespace) {
+                    q.push("\n");
+                    for (int m = 0; m < indent; m++) {
+                        q.push("    ");
+                    }
+                    //--------
+                    q.push(data);
+                }
 
+                //cout << "queue back = " << q.back() << endl;
+                prev_tag_open = true;
+                i = d - 1;
+                break;
+            }
+            }
+            continue;
+        }
+        else
+            continue;
+        }
+        int size = q.size();
+        //cout << "queue size = " << size << endl;
+        for (int i = 0; i < size; i++) {
+            if (!q.empty()) {
+                out_str += q.front();
+                q.pop();
+            }
+        }
+    //cout << out_str;
+    *frmtd = QString::fromStdString(out_str);
+}
+//------------------------------------------------
 void MainWindow::on_format_pushButton_clicked()
 {
-    string input_str = ui->input_textBrowser->toPlainText().toStdString();
-    check_formatting(input_str);
-    QString output_q = QString::fromStdString(formatted);
+//    string input_str = ui->input_textBrowser->toPlainText().toStdString();
+//    check_formatting(input_str);
+//    QString output_q = QString::fromStdString(formatted);
+//    ui->output_textBrowser->setText("");
+//    ui->output_textBrowser->setText(output_q);
+
+    QString frmtd;
+    string input_str = ui->output_textBrowser->toPlainText().toStdString();
+    format2(input_str, &frmtd);
     ui->output_textBrowser->setText("");
-    ui->output_textBrowser->setText(output_q);
+    ui->output_textBrowser->setText(frmtd);
 }
 
 
@@ -567,6 +979,7 @@ void MainWindow::on_decompress_pushButton_clicked()
     ui->output_textBrowser->setText("");
     ui->output_textBrowser->setText(decod_q);
 }
+//----------------------------------
 string final_json = "";
 void convert_xmlToJson(string xml_file) {
     final_json = "";
@@ -721,11 +1134,214 @@ void convert_xmlToJson(string xml_file) {
         final_json = final_json + vlu + "\n";
     }
 }
+//-------------CONVERT2-----------------------------
+void convert_xmlToJson2(string xml_file) {
+    list <string> lst;
+    list <string> saved;
 
+    for (int i = 0; i < xml_file.length(); i++)
+    {
+        string start = "";
+        string value = "";
+
+        if (xml_file[i] == '<')
+        {
+            switch (xml_file[i + 1]) {
+            case'!':
+                continue;
+                break;
+            case'?':
+                continue;
+                break;
+
+            default: // push into the stack
+            {
+                //for tag
+                for (i = i + 1; xml_file[i] != '>'; i++)
+                {
+                    start = start + xml_file[i];
+                }
+                lst.push_back(start);
+
+                //for value
+                int k;
+                for (k = i + 1; xml_file[k] != '<' && k < xml_file.length(); k++) //loop till the opening tag
+                {  //not value
+                    if (xml_file[k] == ' ' && xml_file[k - 1] == ' ' || xml_file[k] == ' ' && xml_file[k - 1] == '>' || xml_file[k] == '<' && xml_file[k - 1] == ' ' || xml_file[k] == '\n' || xml_file[k] == '\t' || xml_file[k] == ' ' && xml_file[k - 1] == '\n' || xml_file[k] == ' ' && xml_file[k - 1] == '\t') continue;
+
+                    else value = value + xml_file[k]; // a value
+                }
+                if (value != "") lst.push_back(value);
+
+            }
+            } // switch brackit
+        }
+        else continue; // if not "<"
+    }
+
+
+    // now we have a list of the tags and values
+
+
+
+
+    auto ptr = lst.begin(); // head of the lst
+    stack <string> cls_square_b;
+
+    // we turn from lst to saved
+    for (; ptr != lst.end();) {
+        string s = *ptr;  // data of the node
+
+        //in case of opening tag ,, and here there is 2 cases add value or add group brackit
+        if (s[0] != '/' && s[0] != '  ' && s[0] != '{' && s[0] != '}' && s[0] != ',' && s[0] != '[' && s[0] != ']') {
+
+            if (next(ptr, 1) != lst.end() && next(ptr, 2) != lst.end()) { //check there is next and after next
+
+                // to avoid repeaating names
+                if (ptr == lst.begin()) saved.push_back(*ptr);
+                if (ptr != lst.begin() && '/' + *ptr != *prev(ptr, 1)) saved.push_back(*ptr);
+
+
+                //value
+                string two_next = *next(ptr, 2); // check that it doesn't exceed the list
+                if ('/' + s == two_next) {       // one line xml tags
+                    saved.push_back(*next(ptr)); // push the value
+                    ptr = next(ptr, 2); // increase ptr with 2 ptr  = ptr + 2 to skip the value node
+                    continue;
+                }
+
+                //group brackit
+                if ('/' + s != two_next) {  // group opening tag
+                    saved.push_back("{");	//lst.emplace(next(ptr), 1, '{');
+                    ptr++;
+                    continue;
+                }
+            }
+        }
+
+
+        //in case of closing tag
+        if (s[0] == '/') {
+
+            // }
+            string two_prev = *prev(ptr, 2);
+            if (s != '/' + two_prev) saved.push_back("}"); //not one line, so group closing tag
+
+
+            // ,
+            if (next(ptr) != lst.end()) //not exceed the length
+            {
+                string next_node = *next(ptr, 1); // check what's after me
+
+                //in case of name add <<<<< , >>>>>>
+                if (next_node[0] != '/' && next_node[0] != '}' && next_node[0] != ',') saved.push_back(",");
+
+
+
+                // name as my name
+                if (*ptr == '/' + next_node) {
+
+                    cls_square_b.push(*ptr); // push for the ] brackit
+
+
+                    // for opening brackit [ :
+                    auto srch = saved.end();
+                    srch--;
+
+                    for (; srch != saved.begin();) {
+                        if ('/' + *srch != *ptr) {
+                            srch--;
+                            continue;
+                        }
+                        if (*next(srch, 1) != "[") {
+                            saved.emplace(next(srch), 1, '[');
+                        }
+
+                        break;
+                    }
+                    if ('/' + *srch == *ptr && srch == saved.begin()) saved.emplace(next(srch), 1, '[');
+                }
+
+                // for closing brackit ] :
+
+                if (!cls_square_b.empty() && *ptr == cls_square_b.top() && *ptr != '/' + next_node) {
+
+                    saved.push_back("]");
+                    cls_square_b.pop();
+
+                }
+
+            } // not exceeding the length
+            else { // so we now point at last elemnt in the list, so we need to check if it has ]
+                if (!cls_square_b.empty() && *ptr == cls_square_b.top()) { //we won't check if it doesn't equal its next because it has no next, it's the last one
+                    saved.push_back("]");
+                    cls_square_b.pop();
+                }
+            }
+
+            ptr++;
+        }
+    }
+
+
+    // for printing in a json format
+
+
+    string JSON_formating = "";
+    JSON_formating = JSON_formating + "{" + '\n' + "  ";
+    // cout << "{" << '\n' ;
+
+    string last_space = "  ";
+    auto pt = saved.begin();
+    for (pt = saved.begin(); pt != saved.end(); pt++) {
+        //name or value
+        if (*pt != "{" && *pt != "}" && *pt != "[" && *pt != "]" && *pt != ",") {
+
+            if (pt == saved.begin())
+                JSON_formating = JSON_formating + "\"" + *pt + "\"" + ":" + " ";
+            //cout << "\"" << *pt << "\"" << ":" << " "; //tag name
+            else if (*next(pt, 1) != "]" && *next(pt, 1) != "}" && *next(pt, 1) != ",")
+                JSON_formating = JSON_formating + "\"" + *pt + "\"" + ":" + " ";
+            //cout << "\"" << *pt << "\"" << ":" << " "; //tag name
+            else {
+                try { // number
+                    stoi(*pt);
+                    JSON_formating = JSON_formating + *pt;
+                    //cout << stoi(*pt);  // value
+                }
+                catch (invalid_argument e) {
+                    JSON_formating = JSON_formating + "\"" + *pt + "\"";
+                    //cout << "\"" << *pt << "\"";  // value
+                }
+            }
+
+        }
+        if (*pt == "{" || *pt == "[") {
+            last_space += "  ";
+            JSON_formating = JSON_formating + *pt + '\n' + last_space;
+            // cout << *pt << '\n' << last_space;
+        }
+
+        if (*pt == ",") {
+            JSON_formating = JSON_formating + *pt + '\n' + last_space;
+            //cout << *pt << '\n' << last_space;
+        }
+
+        if (*pt == "}" || *pt == "]") {
+            last_space.erase(last_space.length() - 2);
+            JSON_formating = JSON_formating + '\n' + last_space + *pt;
+            //cout << '\n' << last_space << *pt;
+        }
+
+    }
+    JSON_formating = JSON_formating + '\n' + '}';
+    final_json = JSON_formating;
+}
+//------------------------------------------
 void MainWindow::on_convert_pushButton_clicked()
 {
-    string xml_in = ui->input_textBrowser->toPlainText().toStdString();
-    convert_xmlToJson(xml_in);
+    string xml_in = ui->output_textBrowser->toPlainText().toStdString();
+    convert_xmlToJson2(xml_in);
     QString json_q = QString::fromStdString(final_json);
     qDebug() << json_q << "\n";
     ui->output_textBrowser->setText(json_q);
@@ -869,3 +1485,4 @@ void MainWindow::on_graph_pushButton_clicked()
     QDir::setCurrent(cpath);
     system("python pythonScript1.py");
 }
+
