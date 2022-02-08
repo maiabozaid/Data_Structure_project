@@ -86,7 +86,6 @@ void format(string xml_file) {
                     }
                 }
                 q.push(opening_tag);
-                
                 int d;
                 for (d = k + 1; xml_file[d] != '<'; d++)
                 {
@@ -107,7 +106,6 @@ void format(string xml_file) {
                     }
                     q.push(data);
                 }
-
                 prev_tag_open = true;
                 i = d - 1;
                 break;
