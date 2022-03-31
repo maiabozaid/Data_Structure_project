@@ -1,6 +1,7 @@
 # Data_Structure_project
 
-### This project is written in the C++ language.
+### This project is written in the C++ language.  
+### Program used: Qt Creator.  
 This project is a GUI (Graphical User Interface) based program to parse and visualize XML files.  
 The XML files represent users in a social network.  
 
